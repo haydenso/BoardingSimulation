@@ -1,7 +1,5 @@
 package boarding;
 
-//import java.sql.Array;
-//test commit
 
 import repast.simphony.context.Context;
 import repast.simphony.engine.environment.RunEnvironment;
@@ -22,7 +20,7 @@ public class Passenger {
 		public int seatNumber[];
 		private boolean carryonLuggage;
 		private int timeSpentOnLuggage = 0;
-		private float startingPenalty = (float) 1.0;
+		private float startingPenalty = (float) 1.0; // 1 is the lowest now with randomSeed = 1. Lower than 1 and people will move instantly behind each other, not good, but could of course be tried. Starting Penalty default should be 1.
 		private int waitingToStart = 2;
 		private int timeWaited = 0;
 		private boolean doingLuggage = false;
@@ -73,8 +71,8 @@ public class Passenger {
 						+DataHolder.numOfGroup11PassengersLeft+DataHolder.numOfGroup12PassengersLeft+DataHolder.numOfGroup13PassengersLeft;
 				//System.out.println("one " + totalNumOfPassengersLeft);
 				//System.out.println(DataHolder.NAInitialNumberOfPassengers);
-
-				if ((DataHolder.NAInitialNumberOfPassengers-totalNumOfPassengersLeft) == boardingID) {
+				System.out.println(DataHolder.numOfBoardedPAssengers);
+				if ((DataHolder.numOfBoardedPAssengers) == boardingID) {
 					// Time to start boarding, just to make sure that they go in their respective order 
 					readyToStart = true;
 				}
@@ -172,7 +170,7 @@ public class Passenger {
 					//Check if walking up to aisle still
 
 					GridPoint pt_1 = grid.getLocation(this); 
-					if (pt_1.getY() < 3) { // Still moving up to aisle
+					if (pt_1.getY() < DataHolder.numberOfRows) { // Still moving up to aisle
 						boolean someoneinfront = false;
 						for(Object obj : grid.getObjectsAt(pt_1.getX(), pt_1.getY()+1)) {
 							if (obj instanceof Passenger) {
@@ -281,9 +279,9 @@ public class Passenger {
 						if (timeSpentOnLuggage > luggageTime) {
 							//Remove from grid, keep track of where passenger is seated
 							doingLuggage = false;
-							Context<Object> context = ContextUtils.getContext(this);
 							gettingIntoSeat = true;
 							calculateSeatingTime();
+							return;
 						}
 						else {
 							//Do luggage
@@ -313,97 +311,14 @@ public class Passenger {
 						//Check if at row
 						if (pt.getX() == this.seatNumber[0]+1) {
 							if (this.carryonLuggage) {
-								boolean infrontempty = true;
-								boolean behindempty = true;
-								if(spacesGap > 1) {
-									// If bigger than one, figure out all the possible combinations of the number
-									// Number of possibilities is always n+1 (e.g 5 has 6 possibilities)
-									// The following fills up combinations with arrays that contain the the spaces in front and spaces behind 
-									int[][] combinations = getCombinations();
-									
-
-									// For each [front, back] in combinations array, set that as the check for front and back
-									
-									int dist_to_check = (int) Math.ceil(((double)spacesGap)/2.0);
-									//int backcheck = combinations[i][1];		
-									//However for each space we need to check all the spaces up to it, hence calling for another for loop
-									// If the number is 0, there is no point in check
-									int emptySpacesAround = 0;
-									if(dist_to_check != 0) {
-										front_outer:
-										for(int i = 1; i<=dist_to_check; i++) {
-											for(Object obj : grid.getObjectsAt(pt.getX()+i, pt.getY())) {
-												if (obj instanceof Passenger) {
-													infrontempty = false;
-													break front_outer;
-													//Check space in front
-													//At that instant if both are True, then proceed with stowage
-												}
-											}
-											emptySpacesAround += 1;
-										}
-									}
-									
-									if(dist_to_check != 0) {
-										back_outer:
-										for(int i=1; i<=dist_to_check; i++) {
-											for(Object obj : grid.getObjectsAt(pt.getX()-i, pt.getY())) {
-												if (obj instanceof Passenger) {
-													behindempty = false;
-													break back_outer;
-													//Check space behind
-													//At that instant if both are True, then proceed with stowage
-												}
-											}
-											emptySpacesAround += 1;
-
-										}
-									}
-
-									
-									
-
-									if (emptySpacesAround >= spacesGap) {
-										//Do luggage
-										timeSpentOnLuggage++;
-										doingLuggage = true;
-										return;
-
-									}
-								}
-								// if spacesGap == 1, just check front once and back once;
-								else if(spacesGap == 1) {
-									for(Object obj : grid.getObjectsAt(pt.getX()+spacesGap, pt.getY())) {
-										if (obj instanceof Passenger) {
-											infrontempty = false;
-											break;
-											//Check space in front
-											//At that instant if both are True, then proceed with stowage
-										}
-									}
-									for(Object obj : grid.getObjectsAt(pt.getX()-spacesGap, pt.getY())) {
-										if (obj instanceof Passenger) {
-											behindempty = false;
-											break;
-											//Check space behind
-											//At that instant if both are True, then proceed with stowage
-										}
-									}
-									if (infrontempty || behindempty) {
-										//Do luggage
-										timeSpentOnLuggage++;
-										doingLuggage = true;
-										return;
-
-									}
-								}
+								
+								checkStowingPossibilities(pt.getX(), pt.getY());
 
 								
 								
 							}
 							else {
 								//Remove from grid, keep track of where passenger is seated
-								Context<Object> context = ContextUtils.getContext(this);
 								//move to seat
 								gettingIntoSeat = true;
 								calculateSeatingTime();
@@ -558,6 +473,7 @@ public class Passenger {
 				
 				//Reset data trackers
 				DataHolder.numOfNonSeatedPassengers = DataHolder.numberOfRows*DataHolder.numberOfSeatsInRow*2-DataHolder.numberOfSeatsInRow;
+				DataHolder.numOfBoardedPAssengers = 0;
 				DataHolder.timeSpentWaiting = 0;
 				
 				RunEnvironment.getInstance().endRun();
@@ -607,10 +523,103 @@ public class Passenger {
 			
 		}
 		
+		public void checkStowingPossibilities(int x, int y) {
+			boolean infrontempty = true;
+			boolean behindempty = true;
+			if(spacesGap > 1) {
+				// If bigger than one, figure out all the possible combinations of the number
+				// Number of possibilities is always n+1 (e.g 5 has 6 possibilities)
+				// The following fills up combinations with arrays that contain the the spaces in front and spaces behind 
+				//int[][] combinations = getCombinations();
+				
+
+				// For each [front, back] in combinations array, set that as the check for front and back
+				
+				int dist_to_check = (int) Math.ceil(((double)spacesGap)/2.0);
+				//int backcheck = combinations[i][1];		
+				//However for each space we need to check all the spaces up to it, hence calling for another for loop
+				// If the number is 0, there is no point in check
+				int emptySpacesAround = 0;
+				if(dist_to_check != 0) {
+					front_outer:
+					for(int i = 1; i<=dist_to_check; i++) {
+						for(Object obj : grid.getObjectsAt(x+i, y)) {
+							if (obj instanceof Passenger) {
+								infrontempty = false;
+								break front_outer;
+								//Check space in front
+								//At that instant if both are True, then proceed with stowage
+							}
+						}
+						emptySpacesAround += 1;
+					}
+				}
+				
+				if(dist_to_check != 0) {
+					back_outer:
+					for(int i=1; i<=dist_to_check; i++) {
+						for(Object obj : grid.getObjectsAt(x-i, y)) {
+							if (obj instanceof Passenger) {
+								behindempty = false;
+								break back_outer;
+								//Check space behind
+								//At that instant if both are True, then proceed with stowage
+							}
+						}
+						emptySpacesAround += 1;
+
+					}
+				}
+
+				
+				
+
+				if (emptySpacesAround >= spacesGap) {
+					//Do luggage
+					timeSpentOnLuggage++;
+					doingLuggage = true;
+					return;
+
+				}
+			
+			}
+			// if spacesGap == 1, just check front once and back once;
+			else if(spacesGap == 1) {
+				for(Object obj : grid.getObjectsAt(x+spacesGap, y)) {
+					if (obj instanceof Passenger) {
+						infrontempty = false;
+						break;
+						//Check space in front
+						//At that instant if both are True, then proceed with stowage
+					}
+				}
+				for(Object obj : grid.getObjectsAt(x-spacesGap, y)) {
+					if (obj instanceof Passenger) {
+						behindempty = false;
+						break;
+						//Check space behind
+						//At that instant if both are True, then proceed with stowage
+					}
+				}
+				if (infrontempty || behindempty) {
+					//Do luggage
+					timeSpentOnLuggage++;
+					doingLuggage = true;
+					return;
+
+				}
+			}
+			else {
+				timeSpentOnLuggage++;
+				doingLuggage = true;
+				return;
+			}
+		}
+		
 		public boolean someoneStowingInFront(int x, int y) {
 			//Check if someone in front
 			if (x == -1) {
-				System.out.println(x);
+				//System.out.println(x);
 
 			}
 			int firstSpacesInFrontToCheck = (int) Math.ceil(((double) spacesGap)/2.0) - 1;
@@ -618,7 +627,7 @@ public class Passenger {
 			boolean someoneinfront = false;
 			boolean spacesBetweenUsed = false;
 			boolean infrontDoingLuggage = false;
-			for(int i = 1; i <= firstSpacesInFrontToCheck; i++) {
+			for(int i = 0; i <= firstSpacesInFrontToCheck; i++) {
 				for(Object obj : grid.getObjectsAt(x+i+1, y)) {
 					if (obj instanceof Passenger) {
 						someoneinfront = true;
@@ -646,7 +655,7 @@ public class Passenger {
 				}
 				// Think this fixes WWL overchecking
 				//System.out.println("Space between: " + spaceBetween);
-				System.out.println("Space in front To Check: " + spacesInFrontToCheck);
+				//System.out.println("Space in front To Check: " + spacesInFrontToCheck);
 				if (infrontDoingLuggage) {
 					if (spacesGap % 2 == 0) {
 						if (spaceBetween == spacesInFrontToCheck) {
@@ -710,7 +719,7 @@ public class Passenger {
 		
 		private void updateFirstTimeMoving() {
 			if (firstTimeMoving) {
-				switch (group) {
+				/*switch (group) {
 				case 1:
 					DataHolder.numOfGroup1PassengersLeft -= 1;
 					break;
@@ -747,7 +756,8 @@ public class Passenger {
 				default:
 					DataHolder.numOfGroup12PassengersLeft -= 1;
 					break;
-				}
+				}*/
+				DataHolder.numOfBoardedPAssengers += 1;
 				firstTimeMoving = false;
 			}
 		}

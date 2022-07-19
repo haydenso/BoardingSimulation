@@ -18,7 +18,8 @@ public class DataHolder {
 	public static int[][][] seatedPassengersInRow = new int[numberOfRows][2][3];
 	public static int NAInitialNumberOfPassengers = numberOfRows*numberOfSeatsInRow*2-numberOfSeatsInRow;
 	public static int numOfNonSeatedPassengers = NAInitialNumberOfPassengers;
-
+	public static int numOfBoardedPAssengers = 0;
+	
 	public static int numOfGroup1PassengersLeft = 0; // Will be given value during runtime
 	public static int numOfGroup2PassengersLeft = 0;
 	public static int numOfGroup3PassengersLeft = 0;
@@ -37,16 +38,17 @@ public class DataHolder {
 	public static int secondGroupLimit = 22;
 
 	//FLYING WING
-	public static int numberOfRowsFlyingWing = 14;
+	public static int numberOfRowsFlyingWing = 70;
 	public static int numberOfSeatsInRowFlyingWing = 3;
 	public static int numberOfSegmentsFlyingWing = 4;
-	public static int[][][][] seatedPassengersInRowFlyingWing = new int[numberOfSegmentsFlyingWing][numberOfRows][2][numberOfSeatsInRowFlyingWing];
+	public static int[][][][] seatedPassengersInRowFlyingWing = new int[numberOfSegmentsFlyingWing][numberOfRowsFlyingWing][2][numberOfSeatsInRowFlyingWing];
 
 	public static int firstGroupLimitFlyingWing = 5;
 	public static int secondGroupLimitFlyingWing = 10;
 	
 	public static int numOfNonSeatedPassengersFlyingWing = (numberOfSegmentsFlyingWing-1)*numberOfRowsFlyingWing*numberOfSeatsInRowFlyingWing*2+2*(numberOfRowsFlyingWing-3)*numberOfSeatsInRowFlyingWing;
-	
+	public static int FWnumOfBoardedPassengers= 0;
+
 	
 	
 	//TETA

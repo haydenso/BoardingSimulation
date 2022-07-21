@@ -61,7 +61,7 @@ public class Passenger {
 			this.group = group;
 		}
 		
-		@ScheduledMethod(start = 1, interval = 1)
+		//@ScheduledMethod(start = 1, interval = 1)
 		public void step() {
 			
 			
@@ -170,7 +170,7 @@ public class Passenger {
 					//Check if walking up to aisle still
 
 					GridPoint pt_1 = grid.getLocation(this); 
-					if (pt_1.getY() < DataHolder.numberOfRows) { // Still moving up to aisle
+					if (pt_1.getY() < DataHolder.numberOfSeatsInRow) { // Still moving up to aisle
 						boolean someoneinfront = false;
 						for(Object obj : grid.getObjectsAt(pt_1.getX(), pt_1.getY()+1)) {
 							if (obj instanceof Passenger) {

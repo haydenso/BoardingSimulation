@@ -38,12 +38,12 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		context.setId("Boarding");
 	
 		//NARROW AIRCRAFT
-		//ContinuousSpace space = generateNarrowAircraftSpace(context);
-		//Grid grid = generateNarrowAircraftGrid(context);
+		ContinuousSpace space = generateNarrowAircraftSpace(context);
+		Grid grid = generateNarrowAircraftGrid(context);
 
 		//FLYING WING AIRCRAFT
-		ContinuousSpace space = generateFlyingWingAircraftSpace(context);
-		Grid grid = generateFlyingWingAircraftGrid(context);
+		//ContinuousSpace space = generateFlyingWingAircraftSpace(context);
+		//Grid grid = generateFlyingWingAircraftGrid(context);
 		
 		//TETA AIRCRAFT
 		//ContinuousSpace space = generateTETAAircraftSpace(context);
@@ -100,7 +100,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		//slowFastBoarding(context, space, grid);
 		
 		//Steffen boarding
-		//steffenBoarding(context, space, grid);
+		steffenBoarding(context, space, grid);
 		
 		//P4R
 		//p4rBoarding(context, space, grid);
@@ -131,7 +131,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		//segmentedSeatBoardingFlyingWing(context, space, grid);
 
 		//Steffen Boarding
-		steffenBoardingFlyingWing(context, space, grid);
+		//steffenBoardingFlyingWing(context, space, grid);
 		
 		//Segmented boarding
 		//segmentedBoardingFlyingWing(context, space, grid);
@@ -182,9 +182,12 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 			
 		}
 		
-		
-		context.add(new FlyingWingIterator());
-	
+		// Add for narrow aircraft
+		context.add(new NarrowAircraftIterator());
+
+		// Add for Flying Wing
+		//context.add(new FlyingWingIterator());
+
 		return context;
 	}
 	

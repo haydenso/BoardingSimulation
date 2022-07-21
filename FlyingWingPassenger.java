@@ -61,9 +61,7 @@ public class FlyingWingPassenger {
 		this.segment = segment;
 	}
 	
-	public int getID() {
-		return this.boardingID;
-	}
+	
 	
 	//@ScheduledMethod(start = 1, interval = 1)
 	public void step() {

@@ -19,7 +19,7 @@ public class FlyingWingPassenger {
 	public int seatNumber[];
 	private boolean carryonLuggage;
 	private int timeSpentOnLuggage = 0;
-	private float startingPenalty = (float) 1.0; // 1 is the lowest now with randomSeed = 1. Lower than 1 and people will move instantly behind each other, not good, but could of course be tried. Starting Penalty default should be 1.
+	private float startingPenalty = (float) 0.0; // 1 is the lowest now with randomSeed = 1. Lower than 1 and people will move instantly behind each other, not good, but could of course be tried. Starting Penalty default should be 1.
 	private int waitingToStart = 2;
 	private boolean doingLuggage = false;
 	private float speed;
@@ -42,10 +42,10 @@ public class FlyingWingPassenger {
 	private boolean readyToStart = false;
 	private boolean standingAround = false;
 	private double averageWaitingTime;
-	private int spacesGap = 1;
+	private int spacesGap = 0;
 	
 	//public int luggageTime = ProbabilityTimeGenerator.generateWeibullLuggageTime();
-	public int luggageTime = 10;
+	public int luggageTime = 15;
 	
 	public FlyingWingPassenger(ContinuousSpace<Object> space, 
 			Grid<Object> grid, 
@@ -59,29 +59,25 @@ public class FlyingWingPassenger {
 		this.speed = speed;
 		this.group = group;
 		this.segment = segment;
-		
 	}
 	
-	@ScheduledMethod(start = 1, interval = 1)
+	public int getID() {
+		return this.boardingID;
+	}
+	
+	//@ScheduledMethod(start = 1, interval = 1)
 	public void step() {
 		
 		if(timeBeforeBoarding <= 0) {
 			boolean stay = true;
-			int constant = DataHolder.numberOfSeatsInRow*2*(DataHolder.numberOfRowsFlyingWing-1)*0;
+			//int constant = DataHolder.numberOfSeatsInRow*2*(DataHolder.numberOfRowsFlyingWing-1)*0;
 			//System.out.println(DataHolder.FWnumOfBoardedPassengers);
 			if ((DataHolder.FWnumOfBoardedPassengers) >= boardingID) {
 				// Time to start boarding, just to make sure that they go in their respective order 
 				//readyToStart = true;
 				stay = false;
 			}
-			else {
-				if (!seated) {
-					//System.out.println("BID " + boardingID);
-					//System.out.println("boarded pas  " + DataHolder.FWnumOfBoardedPassengers);
-				}
-				
-
-			}
+			
 			
 			/*switch (group) {
 			case 1:
@@ -227,13 +223,15 @@ public class FlyingWingPassenger {
 				
 				
 				
-				
 				if(someoneinfront) {
 					//Do nothing (add stress factor?)
 					//DataHolder.numberOfCollissions += 1;
 				}
 				else {
-					
+					if (boardingID == 1) {
+						System.out.println("No one in front! Waiting time: " + waitingToStart);
+
+					}
 					if (waitingToStart == 1) {
 						//DataHolder.numberOfCollissions += 1;
 					}

@@ -20,7 +20,7 @@ public class Passenger {
 		public int seatNumber[];
 		private boolean carryonLuggage;
 		private int timeSpentOnLuggage = 0;
-		private float startingPenalty = (float) 1.0; // 1 is the lowest now with randomSeed = 1. Lower than 1 and people will move instantly behind each other, not good, but could of course be tried. Starting Penalty default should be 1.
+		private float startingPenalty = (float) 0.0; // 1 is the lowest now with randomSeed = 1. Lower than 1 and people will move instantly behind each other, not good, but could of course be tried. Starting Penalty default should be 1.
 		private int waitingToStart = 2;
 		private int timeWaited = 0;
 		private boolean doingLuggage = false;
@@ -39,7 +39,7 @@ public class Passenger {
 		private boolean readyToStart = false;
 		private boolean standingAround = false;
 		private double averageWaitingTime;
-		private int spacesGap = 2;
+		private int spacesGap = 1;
 		
 		//This is for more stochastic boarding (for more general procedure)
 

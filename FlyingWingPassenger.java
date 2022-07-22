@@ -42,7 +42,7 @@ public class FlyingWingPassenger {
 	private boolean readyToStart = false;
 	private boolean standingAround = false;
 	private double averageWaitingTime;
-	private int spacesGap = 0;
+	private int spacesGap = 1;
 	
 	//public int luggageTime = ProbabilityTimeGenerator.generateWeibullLuggageTime();
 	public int luggageTime = 15;

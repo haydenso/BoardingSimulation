@@ -40,7 +40,7 @@ public class DataHolder {
 	//FLYING WING
 	public static int numberOfRowsFlyingWing = 14;
 	public static int numberOfSeatsInRowFlyingWing = 3;
-	public static int numberOfSegmentsFlyingWing = 5;
+	public static int numberOfSegmentsFlyingWing = 1;
 	public static int[][][][] seatedPassengersInRowFlyingWing = new int[numberOfSegmentsFlyingWing][numberOfRowsFlyingWing][2][numberOfSeatsInRowFlyingWing];
 
 	public static int firstGroupLimitFlyingWing = 5;

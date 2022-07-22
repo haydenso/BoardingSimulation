@@ -38,12 +38,12 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		context.setId("Boarding");
 	
 		//NARROW AIRCRAFT
-		ContinuousSpace space = generateNarrowAircraftSpace(context);
-		Grid grid = generateNarrowAircraftGrid(context);
+		//ContinuousSpace space = generateNarrowAircraftSpace(context);
+		//Grid grid = generateNarrowAircraftGrid(context);
 
 		//FLYING WING AIRCRAFT
-		//ContinuousSpace space = generateFlyingWingAircraftSpace(context);
-		//Grid grid = generateFlyingWingAircraftGrid(context);
+		ContinuousSpace space = generateFlyingWingAircraftSpace(context);
+		Grid grid = generateFlyingWingAircraftGrid(context);
 		
 		//TETA AIRCRAFT
 		//ContinuousSpace space = generateTETAAircraftSpace(context);
@@ -100,7 +100,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		//slowFastBoarding(context, space, grid);
 		
 		//Steffen boarding
-		steffenBoarding(context, space, grid);
+		//steffenBoarding(context, space, grid);
 		
 		//P4R
 		//p4rBoarding(context, space, grid);
@@ -142,6 +142,9 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		//Parallel segments boarding
 		//parallelSegmentsBoardingFlyingWing(context, space, grid);
 		
+		// Segmented front to back amw
+		segmentedFrontToBackInToOut(context, space, grid);
+		
 	//Disembarking
 		
 		//Random disembarking
@@ -176,17 +179,17 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		
 		///Add this instead for corner boarding on the narrow aircraft
 		for (Object obj : context) {
-			NdPoint pt = new NdPoint(0.4,0.4);
+			NdPoint pt = new NdPoint(0.4,0.3);
 			space.moveTo(obj, pt.getX(), pt.getY());
 			grid.moveTo(obj, (int)pt.getX(), (int)pt.getY());
 			
 		}
 		
 		// Add for narrow aircraft
-		context.add(new NarrowAircraftIterator());
+		//context.add(new NarrowAircraftIterator());
 
 		// Add for Flying Wing
-		//context.add(new FlyingWingIterator());
+		context.add(new FlyingWingIterator());
 
 		return context;
 	}
@@ -1024,7 +1027,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		for(List<Passenger> fwlist : grouplist) {
 			
 			for(Passenger fwpas : fwlist) {
-				int time = 3;
+				int time = 0;
 				fwpas.boardingID = ind;
 				fwpas.timeBeforeBoarding = totalgrouptime;
 				ind += 1;
@@ -1872,7 +1875,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		for(List<FlyingWingPassenger> fwlist : grouplist) {
 			
 			for(FlyingWingPassenger fwpas : fwlist) {
-				int time = 0;
+				int time = 3;
 				fwpas.boardingID = ind;
 				fwpas.timeBeforeBoarding = totalgrouptime;
 				ind += 1;
@@ -2178,14 +2181,14 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		int ind = 0;
 		int totalGroupTime = 0;
 				
-		for (int a = 0; a < numberOfSeatsInRow; a++) {
+		for (int a = 0; a < DataHolder.numberOfSeatsInRowFlyingWing; a++) {
 			for(int e = 0; e < 2; e++) {
 				
 
 				
 					
 				
-					for (int i = 0; i < DataHolder.numberOfRowsFlyingWing; i+=1) {
+					for (int i = 0; i < DataHolder.numberOfRowsFlyingWing; i+=2) {
 							for(int s = 0; s < DataHolder.numberOfSegmentsFlyingWing; s++) {
 								boolean skip = false;
 								int row = DataHolder.numberOfRowsFlyingWing - 1 - i;
@@ -2218,6 +2221,42 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 							
 						}
 					}
+							
+						
+					}
+					for (int i = 1; i < DataHolder.numberOfRowsFlyingWing; i+=2) {
+						for(int s = 0; s < DataHolder.numberOfSegmentsFlyingWing; s++) {
+							boolean skip = false;
+							int row = DataHolder.numberOfRowsFlyingWing - 1 - i;
+							if((s==DataHolder.numberOfSegmentsFlyingWing-1 && e == 1 && row < 3)) {
+								skip = true;
+							}
+							else if((s==0 && e == 0 && row < 3)){
+								skip = true;
+							}
+							if(!skip) {
+								int seat[] = {row,e, DataHolder.numberOfSeatsInRowFlyingWing-1-a};
+								Random rd = new Random();
+								
+								//float speed = (float) (0.5 + rd.nextFloat()*(0.5));
+								float speed = (float) 1.0;
+								FlyingWingPassenger fwpas = new FlyingWingPassenger(space, grid, seat, 
+										true, 
+										speed, 1, DataHolder.numberOfSegmentsFlyingWing-1-s
+										);
+								fwpassengers.add(fwpas);
+								int time = 3;
+								fwpas.boardingID = ind;
+								fwpas.timeBeforeBoarding = totalGroupTime;
+								totalGroupTime += time;
+								context.add(fwpas);
+								ind += 1;
+								
+								DataHolder.seatedPassengersInRowFlyingWing[DataHolder.numberOfSegmentsFlyingWing-1-s][row][e][DataHolder.numberOfSeatsInRow-1-a] = 0;
+
+						
+					}
+						}
 				
 				}
 			}
@@ -2412,6 +2451,60 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 
 	}*/
 	
+	public void segmentedFrontToBackInToOut(Context<Object> context, ContinuousSpace space, Grid grid) {
+		//Create passengers
+				List<FlyingWingPassenger> fwpassengers = new ArrayList<FlyingWingPassenger>();
+				
+				int ind = 0;
+				int totalGroupTime = 0;
+						
+				
+						
+						for (int i = 0; i < DataHolder.numberOfRowsFlyingWing; i+=1) {
+							for (int a = 0; a < DataHolder.numberOfSeatsInRowFlyingWing; a++) {
+								int wma = a;
+								for(int e = 0; e < 2; e++) {
+
+									for(int s = 0; s < DataHolder.numberOfSegmentsFlyingWing; s++) {
+										boolean skip = false;
+										int row = i;
+										if((s==DataHolder.numberOfSegmentsFlyingWing-1 && e == 1 && row < 3)) {
+											skip = true;
+										}
+										else if((s==0 && e == 0 && row < 3)){
+											skip = true;
+										}
+										if(!skip) {
+											int seat[] = {row,e, wma};
+											Random rd = new Random();
+											
+											//float speed = (float) (0.5 + rd.nextFloat()*(0.5));
+											float speed = (float) 1.0;
+											FlyingWingPassenger fwpas = new FlyingWingPassenger(space, grid, seat, 
+													true, 
+													speed, 1, DataHolder.numberOfSegmentsFlyingWing-1-s
+													);
+											fwpassengers.add(fwpas);
+											int time = 3;
+											fwpas.boardingID = ind;
+											fwpas.timeBeforeBoarding = totalGroupTime;
+											totalGroupTime += time;
+											context.add(fwpas);
+											ind += 1;
+											
+											DataHolder.seatedPassengersInRowFlyingWing[DataHolder.numberOfSegmentsFlyingWing-1-s][row][e][a] = 0;
+
+									
+								}
+							}
+									
+								
+							}
+							
+					}
+				}		
+	}
+
 	public void randomDisembarkingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid) {
 		
 		

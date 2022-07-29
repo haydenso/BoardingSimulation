@@ -3,14 +3,8 @@ package boarding;
 import java.util.Comparator;
 
 import repast.simphony.context.Context;
-import repast.simphony.engine.environment.RunEnvironment;
 import repast.simphony.engine.schedule.ScheduledMethod;
-import repast.simphony.query.space.grid.GridCellNgh;
-import repast.simphony.space.SpatialMath;
-import repast.simphony.space.continuous.ContinuousSpace;
-import repast.simphony.space.continuous.NdPoint;
-import repast.simphony.space.grid.Grid;
-import repast.simphony.space.grid.GridPoint;
+
 import repast.simphony.util.ContextUtils;
 import java.util.stream.*;
 
@@ -29,18 +23,21 @@ public class FlyingWingIterator {
 		}; 
 	private boolean setUp = false;
 	private Stream<Object> stream;
+	
 	@ScheduledMethod(start = 1, interval = 1)
 	public void step() {
 		if (!setUp) {
 			Context<Object> context = ContextUtils.getContext(this);
-			stream = context.getObjectsAsStream(FlyingWingPassenger.class).sorted((fwp1, fwp2) -> ((Integer) ((FlyingWingPassenger) fwp1).boardingID).compareTo(((Integer) ((FlyingWingPassenger) fwp2).boardingID)));
+			stream = context.getObjectsAsStream(FlyingWingPassenger.class).sorted((fwp1, fwp2) -> ((Integer) ((FlyingWingPassenger) fwp2).boardingID).compareTo(((Integer) ((FlyingWingPassenger) fwp1).boardingID)));
 
 
 		}
 		stream.forEach(fwp -> ((FlyingWingPassenger) fwp).step());
-
+		
 		
 		
 	}
+	
+	
 	
 }

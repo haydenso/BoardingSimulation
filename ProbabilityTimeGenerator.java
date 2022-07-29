@@ -2,7 +2,14 @@ package boarding;
 
 import java.util.Random;
 
+import repast.simphony.engine.environment.RunEnvironment;
+import repast.simphony.parameter.Parameters;
+import repast.simphony.random.RandomHelper;
+
 public class ProbabilityTimeGenerator {
+	
+	public static int num = 0;
+	public static int total_lugtime = 0;
 
 	public static int generateWeibullLuggageTime() {
 		Random rd = new Random();
@@ -37,6 +44,26 @@ public class ProbabilityTimeGenerator {
 		
 		return 40+val; //40-45
 		
+	}
+	
+	public static int generateGaussianLuggageTime() {
+		Parameters params = RunEnvironment.getInstance().getParameters();
+		double deviation = params.getDouble("lugDeviation");
+		double mean = params.getDouble("lugMean");
+		RandomHelper randomHelper = new RandomHelper();
+		
+		int lugtime = randomHelper.createNormal(mean, deviation).nextInt();
+		if (lugtime < 0) {
+			//System.out.println("Asymmetry");
+			lugtime = 0;
+		}
+		//System.out.println(lugtime);
+		total_lugtime += lugtime;
+		num += 1;
+		System.out.println((double) total_lugtime/(double) num);
+		//System.out.println(total_lugtime);
+		//System.out.println(num);
+		return lugtime;
 	}
 	
 }

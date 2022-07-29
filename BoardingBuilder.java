@@ -23,6 +23,10 @@ import repast.simphony.space.grid.SimpleGridAdder;
 import repast.simphony.space.grid.WrapAroundBorders;
 import repast.simphony.util.SimUtilities;
 import repast.simphony.engine.schedule.*;
+import repast.simphony.engine.environment.RunEnvironment;
+import repast.simphony.parameter.*;
+import java.util.stream.Collectors;
+
 
 public class BoardingBuilder implements ContextBuilder<Object> {
 	
@@ -36,18 +40,51 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		
 		// TODO Auto-generated method stub
 		context.setId("Boarding");
-	
-		//NARROW AIRCRAFT
-		//ContinuousSpace space = generateNarrowAircraftSpace(context);
-		//Grid grid = generateNarrowAircraftGrid(context);
-
-		//FLYING WING AIRCRAFT
-		ContinuousSpace space = generateFlyingWingAircraftSpace(context);
-		Grid grid = generateFlyingWingAircraftGrid(context);
 		
-		//TETA AIRCRAFT
-		//ContinuousSpace space = generateTETAAircraftSpace(context);
-		//Grid grid = generateTETAAircraftGrid(context);
+		// Get parameters
+		Parameters params = RunEnvironment.getInstance().getParameters();
+		int numberOfSegmentsFlyingWing = params.getInteger("numberOfSegmentsFlyingWing");
+		int time = params.getInteger("timeSpace");
+		int groups = params.getInteger("numberOfGroups");
+		int entropy = params.getInteger("entropy");
+
+		float stoppingPenalty = params.getFloat("stoppingPenalty");
+		//stoppingPenalty = (float) 0.5;
+		DataHolder.numberOfSegmentsFlyingWing = numberOfSegmentsFlyingWing;
+		DataHolder.setComputedProperties();
+		
+		int aircraft = 1; // 0 = NA, 1 = FW, 2 = TETA (still have to choose appropriate boarding method)
+		ContinuousSpace space;
+		Grid grid;
+		
+		switch (aircraft) {
+		case 0:
+			//NARROW AIRCRAFT
+			space = generateNarrowAircraftSpace(context);
+			grid = generateNarrowAircraftGrid(context);
+			break;
+		case 1:
+			//FLYING WING AIRCRAFT
+			space = generateFlyingWingAircraftSpace(context);
+			grid = generateFlyingWingAircraftGrid(context);
+			break;
+		case 2:
+			//TETA AIRCRAFT
+			space = generateTETAAircraftSpace(context);
+			grid = generateTETAAircraftGrid(context);
+			break;
+			
+		default:
+			//NARROW AIRCRAFT
+			space = generateNarrowAircraftSpace(context);
+			grid = generateNarrowAircraftGrid(context);
+			break;
+		}
+		
+		
+
+		
+		
 		
 		
 		/*ContinuousSpaceFactory spaceFactory = ContinuousSpaceFactoryFinder.createContinuousSpaceFactory(null);
@@ -85,22 +122,22 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 	
 	//NARROW AIRCRAFT
 		//Random boarding
-		//randomBoarding(context, space, grid);
+		//randomBoarding(context, space, grid, time);
 		
 		//Random but same boarding
-		//frontToBackOneByOne(context, space, grid);
+		//frontToBackOneByOne(context, space, grid, time);
 		
 		//Group boarding
-		//groupBoarding(context, space, grid);
+		//groupBoarding(context, space, grid, time);
 		
 		//Seat boarding
-		//seatBoarding(context, space, grid);
+		//seatBoarding(context, space, grid, time);
 		
 		//Slow-fast boarding
 		//slowFastBoarding(context, space, grid);
 		
 		//Steffen boarding
-		//steffenBoarding(context, space, grid);
+		//steffenBoarding(context, space, grid, time, entropy);
 		
 		//P4R
 		//p4rBoarding(context, space, grid);
@@ -113,25 +150,27 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		//Front-to-bakc disembarking
 		//frontToBackDisembarking(context, space, grid);
 		
+		// Scalable Group Boarding
+		//groupBoardingScalable(context, space, grid, time, groups);
 		
 //FLYING WING AIRCRAFT
 		
 	//Boarding
 		
 		//Random boarding
-		//randomBoardingFlyingWing(context, space, grid);
+		//randomBoardingFlyingWing(context, space, grid, time);
 		
 		//Group boarding
-		//groupBoardingFlyingWing(context, space, grid);
+		//groupBoardingFlyingWing(context, space, grid, time);
 		
 		//WMA boarding
 		//seatBoardingFlyingWing(context, space, grid);
 		
-		//WMA boarding
-		//segmentedSeatBoardingFlyingWing(context, space, grid);
+		// Segmented WMA boarding
+		segmentedSeatBoardingFlyingWing(context, space, grid, time, stoppingPenalty);
 
 		//Steffen Boarding
-		//steffenBoardingFlyingWing(context, space, grid);
+		//steffenBoardingFlyingWing(context, space, grid, time, stoppingPenalty, entropy);
 		
 		//Segmented boarding
 		//segmentedBoardingFlyingWing(context, space, grid);
@@ -140,10 +179,16 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		//segmentedSegmentedBoardingFlyingWing(context, space, grid);
 		
 		//Parallel segments boarding
-		//parallelSegmentsBoardingFlyingWing(context, space, grid);
+		//parallelSegmentsBoardingFlyingWing(context, space, grid, time);
 		
 		// Segmented front to back amw
-		segmentedFrontToBackInToOut(context, space, grid);
+		//segmentedFrontToBackInToOut(context, space, grid, time);
+		
+		// Parallel seat boarding
+		//parallelSeatBoardingFlyingWing(context, space, grid, time);
+		
+		// Parallel group boarding
+		//parallelGroupBoardingFlyingWing(context, space, grid, time);
 		
 	//Disembarking
 		
@@ -178,42 +223,55 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		}*/
 		
 		///Add this instead for corner boarding on the narrow aircraft
+		Random rd = new Random();
 		for (Object obj : context) {
-			NdPoint pt = new NdPoint(0.4,0.3);
+			NdPoint pt = new NdPoint(rd.nextDouble(),rd.nextDouble());
 			space.moveTo(obj, pt.getX(), pt.getY());
 			grid.moveTo(obj, (int)pt.getX(), (int)pt.getY());
 			
 		}
 		
-		// Add for narrow aircraft
-		//context.add(new NarrowAircraftIterator());
+		switch (aircraft) {
+		case 0:
+			// Add for narrow aircraft
+			context.add(new NarrowAircraftIterator());
+			break;
+		case 1:
+			// Add for Flying Wing
+			context.add(new FlyingWingIterator());
+			break;
+		default:
+			break;
+		}
+		
+		
 
-		// Add for Flying Wing
-		context.add(new FlyingWingIterator());
+		
 
 		return context;
 	}
 	
-	public void frontToBackOneByOne(Context<Object> context, ContinuousSpace space, Grid grid) {
+	public void frontToBackOneByOne(Context<Object> context, ContinuousSpace space, Grid grid, int time) {
 		//Create passengers
 		List<Passenger> passengers = new ArrayList<Passenger>();
 
 		for (int i = 0; i < numberOfRows; i++) {
+			int row = numberOfRows - 1 - i;
 			for(int e = 0; e < 2; e++) {
 				if (!(i < 1 && e == 0)) {
 					for (int a = 0; a < numberOfSeatsInRow; a++) {
-						int seat[] = {i,e,a};
+						int seat[] = {row,e,a};
 						//Random rd = new Random();
 						
 						//float speed = (float) (0.5 + rd.nextFloat()*(0.5));
 						float speed = (float) 1;
 						passengers.add(new Passenger(space, grid, seat, 
-								false, 
+								true, 
 								speed, 1
 								));
 						
 						
-						DataHolder.seatedPassengersInRow[i][e][a] = 0;
+						DataHolder.seatedPassengersInRow[row][e][a] = 0;
 
 						
 					}
@@ -231,7 +289,6 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		int totalgrouptime = 0;
 		int id = 0;
 		for(Passenger pas : passengers) {
-			int time = 2;
 			pas.boardingID = id;
 			pas.timeBeforeBoarding = totalgrouptime;
 			context.add(pas);
@@ -242,7 +299,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		DataHolder.numOfGroup1PassengersLeft = passengers.size();
 	}
 	
-	public void randomBoarding(Context<Object> context, ContinuousSpace space, Grid grid) {
+	public void randomBoarding(Context<Object> context, ContinuousSpace space, Grid grid, int time) {
 		
 		//Create passengers
 		List<Passenger> passengers = new ArrayList<Passenger>();
@@ -255,9 +312,9 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 						Random rd = new Random();
 						
 						//float speed = (float) (0.5 + rd.nextFloat()*(0.5));
-						float speed = (float) 0.75;
+						float speed = (float) 1;
 						passengers.add(new Passenger(space, grid, seat, 
-								rd.nextBoolean(), 
+								true, 
 								speed, 1
 								));
 						
@@ -277,7 +334,6 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		Random rd = new Random();
 		int totalgrouptime = 0;
 		for(Passenger pas : passengers) {
-			int time = 3;
 			pas.boardingID = ind;
 			pas.timeBeforeBoarding = totalgrouptime;
 			context.add(pas);
@@ -291,7 +347,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		
 	}
 	
-	public void groupBoarding(Context<Object> context, ContinuousSpace space, Grid grid) {
+	public void groupBoarding(Context<Object> context, ContinuousSpace space, Grid grid, int time) {
 		
 		//Create passengers
 		List<Passenger> groupA = new ArrayList<Passenger>();
@@ -303,7 +359,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		float probofearly = (float) 0.0;
 		float proboflate = (float) 0.0;
 		float probofdisobedience = (float) 0.0;
-		float lugprob = (float) 0.5;
+		float lugprob = (float) 1.0;
 		//Group A
 		for (int i = 0; i < DataHolder.firstGroupLimit; i++) {
 			for(int e = 0; e < 2; e++) {
@@ -311,7 +367,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 					for (int a = 0; a < numberOfSeatsInRow; a++) {
 						int seat[] = {i,e,a};
 						Random rd = new Random();
-						float speed = (float) (0.5 + rd.nextFloat()*(0.5));
+						float speed = (float) 1.0;
 						float dec = rd.nextFloat();
 						boolean lug = false;
 						if (dec <= lugprob) {
@@ -380,7 +436,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 						if (dec <= lugprob) {
 							lug = true;
 						}
-						float speed = (float) (0.5 + rd.nextFloat()*(0.5));
+						float speed = (float) 1;
 						
 	//Obliging added
 						float obdec = rd.nextFloat();
@@ -443,7 +499,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 						if (dec <= lugprob) {
 							lug = true;
 						}
-						float speed = (float) (0.5 + rd.nextFloat()*(0.5));
+						float speed = (float) 1;
 						float obdec = rd.nextFloat();
 						int timing = 1; //0 = early, 1 = on time, 2 = late
 						if (obdec < probofdisobedience*proboflate*obedienceconstant) { //only late
@@ -499,7 +555,6 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		int totalgrouptime = 0;
 		int ind = 0;
 		for(Passenger pas : groupA) {
-			int time = 3;
 			pas.boardingID = ind;
 			pas.timeBeforeBoarding = totalgrouptime;
 			ind += 1;
@@ -513,7 +568,6 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		//totalgrouptime = 0;
 		
 		for(Passenger pas : groupB) {
-			int time = 3;
 			pas.boardingID = ind;
 			pas.timeBeforeBoarding = totalgrouptime;
 			ind += 1;
@@ -526,7 +580,6 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		
 		//totalgrouptime = 0;
 		for(Passenger pas : groupC) {
-			int time = 3;
 			pas.boardingID = ind;
 			ind += 1;
 			pas.timeBeforeBoarding = totalgrouptime;
@@ -544,7 +597,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		
 	}
 	
-	public void seatBoarding(Context<Object> context, ContinuousSpace space, Grid grid) {
+	public void seatBoarding(Context<Object> context, ContinuousSpace space, Grid grid, int time) {
 	//Create passengers
 		List<Passenger> groupW = new ArrayList<Passenger>();
 		List<Passenger> groupM = new ArrayList<Passenger>();
@@ -714,7 +767,6 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		int totalgrouptime = 0;
 		
 		for(Passenger pas : groupW) {
-			int time = 3;
 			pas.boardingID = ind;
 			pas.timeBeforeBoarding = totalgrouptime;
 			context.add(pas);
@@ -725,7 +777,6 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		//SimUtilities.shuffle(groupM, RandomHelper.getUniform());
 		
 		for(Passenger pas : groupM) {
-			int time = 3;
 			pas.timeBeforeBoarding = totalgrouptime;
 			pas.boardingID = ind;
 			context.add(pas);
@@ -737,7 +788,6 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		//SimUtilities.shuffle(groupA, RandomHelper.getUniform());
 		
 		for(Passenger pas : groupA) {
-			int time = 3;
 			pas.timeBeforeBoarding = totalgrouptime;
 			pas.boardingID = ind;
 			context.add(pas);
@@ -847,7 +897,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 
 	}
 	
-	public void steffenBoarding(Context<Object> context, ContinuousSpace space, Grid grid) {
+	public void steffenBoarding(Context<Object> context, ContinuousSpace space, Grid grid, int time, int entropy) {
 
 		
 		List<Passenger> groupLWE = new ArrayList<Passenger>();
@@ -1006,35 +1056,43 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		SimUtilities.shuffle(groupRAO, RandomHelper.getUniform());
 		SimUtilities.shuffle(groupLAO, RandomHelper.getUniform());
 */
-		List<List<Passenger>> grouplist = new ArrayList<List<Passenger>>();
-		grouplist.add(groupRWE);
-		grouplist.add(groupLWE);
-		grouplist.add(groupRWO);
-		grouplist.add(groupLWO);
-		grouplist.add(groupRME);
-		grouplist.add(groupLME);
-		grouplist.add(groupRMO);
-		grouplist.add(groupLMO);
-		grouplist.add(groupRAE);
-		grouplist.add(groupLAE);
-		grouplist.add(groupRAO);
-		grouplist.add(groupLAO);
+		List<Passenger> grouplist = new ArrayList<Passenger>();
+		grouplist.addAll(groupRWE);
+		grouplist.addAll(groupLWE);
+		grouplist.addAll(groupRWO);
+		grouplist.addAll(groupLWO);
+		grouplist.addAll(groupRME);
+		grouplist.addAll(groupLME);
+		grouplist.addAll(groupRMO);
+		grouplist.addAll(groupLMO);
+		grouplist.addAll(groupRAE);
+		grouplist.addAll(groupLAE);
+		grouplist.addAll(groupRAO);
+		grouplist.addAll(groupLAO);
 
-		
+		// Switch passengers
 		Random rd = new Random();
+
+		for(int idx = 0; idx < entropy; idx++) {
+			int i_1 = rd.nextInt(grouplist.size());
+			int i_2 = rd.nextInt(grouplist.size());
+			Passenger p1 = grouplist.get(i_1);
+			grouplist.set(i_1, grouplist.get(i_2));
+			grouplist.set(i_2,  p1);
+		}
+		
 		int ind = 0;
 		int totalgrouptime = 0;
-		for(List<Passenger> fwlist : grouplist) {
+		//for(List<Passenger> fwlist : grouplist) {
 			
-			for(Passenger fwpas : fwlist) {
-				int time = 0;
-				fwpas.boardingID = ind;
-				fwpas.timeBeforeBoarding = totalgrouptime;
-				ind += 1;
-				totalgrouptime += time;
-				context.add(fwpas);
-			}
+		for(Passenger fwpas : grouplist) {
+			fwpas.boardingID = ind;
+			fwpas.timeBeforeBoarding = totalgrouptime;
+			ind += 1;
+			totalgrouptime += time;
+			context.add(fwpas);
 		}
+		//}
 		
 		DataHolder.numOfGroup1PassengersLeft = groupRWE.size();
 		DataHolder.numOfGroup2PassengersLeft = groupLWE.size();
@@ -1049,7 +1107,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		DataHolder.numOfGroup11PassengersLeft = groupRAO.size();
 		DataHolder.numOfGroup12PassengersLeft = groupLAO.size();
 		
-		System.out.println(DataHolder.numOfGroup1PassengersLeft);
+		/*System.out.println(DataHolder.numOfGroup1PassengersLeft);
 		System.out.println(DataHolder.numOfGroup2PassengersLeft);
 		System.out.println(DataHolder.numOfGroup3PassengersLeft);
 		System.out.println(DataHolder.numOfGroup4PassengersLeft);
@@ -1060,7 +1118,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		System.out.println(DataHolder.numOfGroup9PassengersLeft);
 		System.out.println(DataHolder.numOfGroup10PassengersLeft);
 		System.out.println(DataHolder.numOfGroup11PassengersLeft);
-		System.out.println(DataHolder.numOfGroup12PassengersLeft);
+		System.out.println(DataHolder.numOfGroup12PassengersLeft);*/
 		
 		
 	}
@@ -1271,6 +1329,67 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		
 	}
 	
+public void groupBoardingScalable(Context<Object> context, ContinuousSpace space, Grid grid, int time, int groups) {
+		
+		//Create passengers
+		List<List < Passenger> > listOfGroupsOfPassengers = new ArrayList< List < Passenger> >();
+		for(int idx = 0; idx < groups; idx++) {
+			listOfGroupsOfPassengers.add(new ArrayList<Passenger>());
+		}
+		//groups = 3
+		//numOfRowsFW = 14
+		//numOfRowsInGroup = 16/3 = 5
+		// Group 1: 0,1,2,3,4
+		// Group 2: 5,6,7,8,9
+		// Group 3: 10,11,12,13,14
+		// Group 4: 15,16
+		int numOfRowsInGroup = (int) Math.ceil((double) (DataHolder.numberOfRows)/groups);
+		for (int i = 0; i < DataHolder.numberOfRows; i++) {
+			int row = DataHolder.numberOfRows - 1 - i;
+			for(int e = 0; e < 2; e++) {
+				if (!(row < 1 && e == 0)) {
+					for (int a = 0; a < numberOfSeatsInRow; a++) {
+						int group = groups - 1 - row/numOfRowsInGroup;
+						if(group < 0) {
+							group = 0;
+						}
+						int seat[] = {row,e,a};
+						Random rd = new Random();
+						float speed = (float) 1;
+						Passenger pas = new Passenger(space, grid, seat, 
+								true, 
+								speed, 1);
+						
+						listOfGroupsOfPassengers.get(group).add(pas);
+						
+						DataHolder.seatedPassengersInRow[row][e][a] = 0;
+
+						
+					}
+				}
+				
+			}
+			
+		}
+		int totalgrouptime = 0;
+		int ind = 0;
+		for(List<Passenger> pass : listOfGroupsOfPassengers) {
+			SimUtilities.shuffle(pass, RandomHelper.getUniform());
+			for(Passenger pas : pass) {
+				pas.boardingID = ind;
+				pas.timeBeforeBoarding = totalgrouptime;
+				ind += 1;
+				context.add(pas);
+				totalgrouptime += time;
+				
+			}
+		}
+		
+		
+			
+		
+	}
+	
 	public void frontToBackDisembarking(Context<Object> context, ContinuousSpace space, Grid grid) {
 		List<DisembarkingPassenger> groupA = new ArrayList<DisembarkingPassenger>();
 		List<DisembarkingPassenger> groupB = new ArrayList<DisembarkingPassenger>();
@@ -1379,7 +1498,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		
 	}
 	
-	public void randomBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid) {
+	public void randomBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time) {
 		//Create passengers
 		List<FlyingWingPassenger> fwpassengers = new ArrayList<FlyingWingPassenger>();
 		for(int s = 0; s < DataHolder.numberOfSegmentsFlyingWing; s++) {
@@ -1399,9 +1518,9 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 								int seat[] = {i,e,a};
 								Random rd = new Random();
 								
-								float speed = (float) (0.5 + rd.nextFloat()*(0.5));
+								float speed = 1;
 								fwpassengers.add(new FlyingWingPassenger(space, grid, seat, 
-										rd.nextBoolean(), 
+										true, 
 										speed, 1, s
 										));
 								DataHolder.seatedPassengersInRowFlyingWing[s][i][e][a] = 0;
@@ -1421,7 +1540,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		int totalgrouptime = 0;
 		Random rd = new Random();
 		for(FlyingWingPassenger pas : fwpassengers) {
-			int time = 1 + rd.nextInt(4);
+			
 			pas.timeBeforeBoarding = totalgrouptime;
 			pas.boardingID = ind;
 			totalgrouptime += time;
@@ -1431,7 +1550,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 	}
 	
 	
-	public void groupBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid) {
+	public void groupBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time) {
 		List<FlyingWingPassenger> fwpassengersA = new ArrayList<FlyingWingPassenger>();
 		List<FlyingWingPassenger> fwpassengersB = new ArrayList<FlyingWingPassenger>();
 		List<FlyingWingPassenger> fwpassengersC = new ArrayList<FlyingWingPassenger>();
@@ -1498,7 +1617,6 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		for(List<FlyingWingPassenger> fwlist : grouplist) {
 			int totalgrouptime = 0;
 			for(FlyingWingPassenger fwpas : fwlist) {
-				int time = 3;
 				fwpas.timeBeforeBoarding = totalgrouptime;
 				fwpas.boardingID = ind;
 				totalgrouptime += time;
@@ -1537,9 +1655,9 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 								int seat[] = {i,e,a};
 								Random rd = new Random();
 								
-								float speed = (float) (0.5 + rd.nextFloat()*(0.5));
+								float speed = (float) 1;
 								FlyingWingPassenger fwpas = new FlyingWingPassenger(space, grid, seat, 
-										rd.nextBoolean(), speed, 1, s);
+										true, speed, 1, s);
 								if(a == 0) {
 									fwpas.group = 3;
 									fwpassengersA.add(fwpas);
@@ -1683,7 +1801,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 
 	}*/
 	
-	public void steffenBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid) {
+	public void steffenBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time, float stoppingPenalty, int entropy) {
 
 		
 		List<FlyingWingPassenger> groupLWE = new ArrayList<FlyingWingPassenger>();
@@ -1854,35 +1972,45 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		SimUtilities.shuffle(groupRAE, RandomHelper.getUniform());
 		SimUtilities.shuffle(groupLAO, RandomHelper.getUniform());*/
 
-		List<List<FlyingWingPassenger>> grouplist = new ArrayList<List<FlyingWingPassenger>>();
-		grouplist.add(groupRWE);
-		grouplist.add(groupLWE);
-		grouplist.add(groupRWO);
-		grouplist.add(groupLWO);
-		grouplist.add(groupRME);
-		grouplist.add(groupLME);
-		grouplist.add(groupRMO);
-		grouplist.add(groupLMO);
-		grouplist.add(groupRAE);
-		grouplist.add(groupLAE);
-		grouplist.add(groupRAO);
-		grouplist.add(groupLAO);
+		List<FlyingWingPassenger>grouplist = new ArrayList<FlyingWingPassenger>();
+		grouplist.addAll(groupRWE);
+		grouplist.addAll(groupLWE);
+		grouplist.addAll(groupRWO);
+		grouplist.addAll(groupLWO);
+		grouplist.addAll(groupRME);
+		grouplist.addAll(groupLME);
+		grouplist.addAll(groupRMO);
+		grouplist.addAll(groupLMO);
+		grouplist.addAll(groupRAE);
+		grouplist.addAll(groupLAE);
+		grouplist.addAll(groupRAO);
+		grouplist.addAll(groupLAO);
 
 		
+		// Switch people around
 		Random rd = new Random();
+
+		for(int idx = 0; idx < entropy; idx++) {
+			int i_1 = rd.nextInt(grouplist.size());
+			int i_2 = rd.nextInt(grouplist.size());
+			FlyingWingPassenger fwp1 = grouplist.get(i_1);
+			grouplist.set(i_1, grouplist.get(i_2));
+			grouplist.set(i_2,  fwp1);
+		}
+		
 		int ind = 0;
 		int totalgrouptime = 0;
-		for(List<FlyingWingPassenger> fwlist : grouplist) {
+		//for(List<FlyingWingPassenger> fwlist : grouplist) {
 			
-			for(FlyingWingPassenger fwpas : fwlist) {
-				int time = 3;
-				fwpas.boardingID = ind;
-				fwpas.timeBeforeBoarding = totalgrouptime;
-				ind += 1;
-				totalgrouptime += time;
-				context.add(fwpas);
-			}
+		for(FlyingWingPassenger fwpas : grouplist) {
+			fwpas.boardingID = ind;
+			fwpas.timeBeforeBoarding = totalgrouptime;
+			fwpas.startingPenalty = stoppingPenalty;
+			ind += 1;
+			totalgrouptime += time;
+			context.add(fwpas);
 		}
+		//}
 		
 		DataHolder.numOfGroup1PassengersLeft = groupRWE.size();
 		DataHolder.numOfGroup2PassengersLeft = groupLWE.size();
@@ -1912,7 +2040,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		
 		
 	}
-	public void segmentedSeatBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid) {
+	public void segmentedSeatBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time, float stoppingPenalty) {
 
 		//Create passengers
 		List<FlyingWingPassenger> fwpassengers = new ArrayList<FlyingWingPassenger>();
@@ -1927,7 +2055,8 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 
 				
 					
-				
+					List<FlyingWingPassenger> fwpass =  new ArrayList<FlyingWingPassenger>();
+					
 					for (int i = 0; i < DataHolder.numberOfRowsFlyingWing; i+=1) {
 								boolean skip = false;
 								int row = DataHolder.numberOfRowsFlyingWing - 1 - i;
@@ -1947,19 +2076,26 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 											true, 
 											speed, 1, DataHolder.numberOfSegmentsFlyingWing-1-s
 											);
-									fwpassengers.add(fwpas);
-									int time = 3;
-									fwpas.boardingID = ind;
-									fwpas.timeBeforeBoarding = totalGroupTime;
-									totalGroupTime += time;
-									context.add(fwpas);
-									ind += 1;
+									fwpas.startingPenalty = stoppingPenalty;
+									fwpass.add(fwpas);
+									
 									
 									DataHolder.seatedPassengersInRowFlyingWing[DataHolder.numberOfSegmentsFlyingWing-1-s][row][e][DataHolder.numberOfSeatsInRow-1-a] = 0;
 
 							
 						}
 					}
+					//SimUtilities.shuffle(fwpass, RandomHelper.getUniform());
+
+					
+					for(FlyingWingPassenger fwpas : fwpass) {
+						fwpas.timeBeforeBoarding = totalGroupTime;
+						fwpas.boardingID = ind;
+						totalGroupTime += time;
+						context.add(fwpas);
+						ind++;
+						
+					} 
 				
 				}
 			}
@@ -2174,7 +2310,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 
 	}
 	
-	public void parallelSegmentsBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid) {
+	public void parallelSegmentsBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time) {
 		//Create passengers
 		List<FlyingWingPassenger> fwpassengers = new ArrayList<FlyingWingPassenger>();
 		
@@ -2209,7 +2345,6 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 											speed, 1, DataHolder.numberOfSegmentsFlyingWing-1-s
 											);
 									fwpassengers.add(fwpas);
-									int time = 3;
 									fwpas.boardingID = ind;
 									fwpas.timeBeforeBoarding = totalGroupTime;
 									totalGroupTime += time;
@@ -2245,7 +2380,6 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 										speed, 1, DataHolder.numberOfSegmentsFlyingWing-1-s
 										);
 								fwpassengers.add(fwpas);
-								int time = 3;
 								fwpas.boardingID = ind;
 								fwpas.timeBeforeBoarding = totalGroupTime;
 								totalGroupTime += time;
@@ -2255,58 +2389,14 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 								DataHolder.seatedPassengersInRowFlyingWing[DataHolder.numberOfSegmentsFlyingWing-1-s][row][e][DataHolder.numberOfSeatsInRow-1-a] = 0;
 
 						
+							}
+						}	
+						
 					}
-						}
-				
-				}
+					
 			}
 		}			
-		/*for (int a = 0; a < numberOfSeatsInRow; a++) {
-			for(int e = 0; e < 2; e++) {
-					
-
-					
-						
-					
-				for (int i = 1; i < DataHolder.numberOfRowsFlyingWing; i+=2) {
-					for(int s = 0; s < DataHolder.numberOfSegmentsFlyingWing; s++) {
-						boolean skip = false;
-						int row = DataHolder.numberOfRowsFlyingWing - 1 - i;
-						if((s==DataHolder.numberOfSegmentsFlyingWing-1 && e == 1 && row < 3)) {
-							skip = true;
-						}
-						else if((s==0 && e == 0 && row < 3)){
-							skip = true;
-						}
-						if(!skip) {
-							int seat[] = {row,e, DataHolder.numberOfSeatsInRowFlyingWing-1-a};
-							Random rd = new Random();
-							
-							//float speed = (float) (0.5 + rd.nextFloat()*(0.5));
-							float speed = (float) 1.0;
-							FlyingWingPassenger fwpas = new FlyingWingPassenger(space, grid, seat, 
-									true, 
-									speed, 1, DataHolder.numberOfSegmentsFlyingWing-1-s
-									);
-							fwpassengers.add(fwpas);
-							int time = 3;
-							fwpas.boardingID = ind;
-							fwpas.timeBeforeBoarding = totalGroupTime;
-							totalGroupTime += time;
-							context.add(fwpas);
-							ind += 1;
-							
-							DataHolder.seatedPassengersInRowFlyingWing[DataHolder.numberOfSegmentsFlyingWing-1-s][row][e][DataHolder.numberOfSeatsInRow-1-a] = 0;
-
-					
-						}
-					}	
-					
-				}
-			}
-			
-			
-		}*/
+		
 		
 		/*SimUtilities.shuffle(fwpassengers, RandomHelper.getUniform());
 		int ind = 0;
@@ -2451,7 +2541,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 
 	}*/
 	
-	public void segmentedFrontToBackInToOut(Context<Object> context, ContinuousSpace space, Grid grid) {
+	public void segmentedFrontToBackInToOut(Context<Object> context, ContinuousSpace space, Grid grid, int time) {
 		//Create passengers
 				List<FlyingWingPassenger> fwpassengers = new ArrayList<FlyingWingPassenger>();
 				
@@ -2485,7 +2575,7 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 													speed, 1, DataHolder.numberOfSegmentsFlyingWing-1-s
 													);
 											fwpassengers.add(fwpas);
-											int time = 3;
+											
 											fwpas.boardingID = ind;
 											fwpas.timeBeforeBoarding = totalGroupTime;
 											totalGroupTime += time;
@@ -2503,6 +2593,215 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 							
 					}
 				}		
+	}
+	
+	public void parallelSeatBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time) {
+
+		//Create passengers
+		List<FlyingWingPassenger> fwpassengers = new ArrayList<FlyingWingPassenger>();
+		
+		int ind = 0;
+		int totalGroupTime = 0;
+		
+			for (int a = 0; a < DataHolder.numberOfSeatsInRowFlyingWing; a++) {
+				for(int e = 0; e < 2; e++) {
+				
+
+					for(int s = 0; s < DataHolder.numberOfSegmentsFlyingWing; s++) {
+
+					
+					List<FlyingWingPassenger> fwpass =  new ArrayList<FlyingWingPassenger>();
+					
+					for (int i = 0; i < DataHolder.numberOfRowsFlyingWing; i+=1) {
+								boolean skip = false;
+								int row = DataHolder.numberOfRowsFlyingWing - 1 - i;
+								if((s==DataHolder.numberOfSegmentsFlyingWing-1 && e == 1 && row < 3)) {
+									skip = true;
+								}
+								else if((s==0 && e == 0 && row < 3)){
+									skip = true;
+								}
+								if(!skip) {
+									int seat[] = {row,e, DataHolder.numberOfSeatsInRowFlyingWing-1-a};
+									Random rd = new Random();
+									
+									//float speed = (float) (0.5 + rd.nextFloat()*(0.5));
+									float speed = (float) 1.0;
+									FlyingWingPassenger fwpas = new FlyingWingPassenger(space, grid, seat, 
+											true, 
+											speed, 1, DataHolder.numberOfSegmentsFlyingWing-1-s
+											);
+									fwpass.add(fwpas);
+									
+									
+									DataHolder.seatedPassengersInRowFlyingWing[DataHolder.numberOfSegmentsFlyingWing-1-s][row][e][DataHolder.numberOfSeatsInRow-1-a] = 0;
+
+							
+						}
+					}
+					SimUtilities.shuffle(fwpass, RandomHelper.getUniform());
+
+					
+					for(FlyingWingPassenger fwpas : fwpass) {
+						fwpas.timeBeforeBoarding = totalGroupTime;
+						fwpas.boardingID = ind;
+						totalGroupTime += time;
+						context.add(fwpas);
+						ind++;
+						
+					} 
+				
+				}
+			}
+		}			
+	}
+	
+	public void parallelGroupBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time) {
+		
+			int ind = 0;
+			int totalgrouptime = 0;
+
+			int numberOfGroups = 3;
+			List<List<List<FlyingWingPassenger> > > masterList = new ArrayList<List<List<FlyingWingPassenger> > >();
+
+			
+			List<Integer> rows = IntStream.range(0, DataHolder.numberOfRowsFlyingWing).boxed().collect(Collectors.toList());
+			List<Integer> seatsInRow = IntStream.range(0, DataHolder.numberOfSeatsInRowFlyingWing).boxed().collect(Collectors.toList());
+
+			SimUtilities.shuffle(rows, RandomHelper.getUniform());
+			SimUtilities.shuffle(seatsInRow, RandomHelper.getUniform());
+
+		for(int s = 0; s < DataHolder.numberOfSegmentsFlyingWing; s++) {
+			List<FlyingWingPassenger> fwpassengersA = new ArrayList<FlyingWingPassenger>();
+			List<FlyingWingPassenger> fwpassengersB = new ArrayList<FlyingWingPassenger>();
+			List<FlyingWingPassenger> fwpassengersC = new ArrayList<FlyingWingPassenger>();
+			for (int i = 0; i < DataHolder.numberOfRowsFlyingWing; i++) {
+				for(int e = 0; e < 2; e++) {
+					
+					for (int a = 0; a < DataHolder.numberOfSeatsInRowFlyingWing; a++) {
+						
+							
+							
+
+
+							int segment = DataHolder.numberOfSegmentsFlyingWing - 1 - s;
+							
+							boolean skip = false;
+
+							if((segment==0 && e == 1 && i < 3)) {
+								skip = true;
+							}
+							else if((segment==DataHolder.numberOfSegmentsFlyingWing-1 && e == 0 && i < 3)){
+								skip = true;
+							}
+							if(!skip) {
+
+								int seatInRow = DataHolder.numberOfSeatsInRowFlyingWing - 1 - a;
+								
+								int seat[] = {i,e,seatInRow};
+								Random rd = new Random();
+								
+								float speed = (float) 1;
+								FlyingWingPassenger fwpas = new FlyingWingPassenger(space, grid, seat, 
+										true, speed, 1, segment);
+								if(i<DataHolder.firstGroupLimitFlyingWing) {
+									fwpassengersA.add(fwpas);
+								}
+								else if(i<DataHolder.secondGroupLimitFlyingWing) {
+									fwpassengersB.add(fwpas);
+
+								}
+								else {
+									fwpassengersC.add(fwpas);
+
+								}
+								DataHolder.seatedPassengersInRowFlyingWing[segment][i][e][seatInRow] = 0;
+
+								
+							}
+						}
+					
+				}
+			}
+			SimUtilities.shuffle(fwpassengersA, RandomHelper.getUniform());
+			SimUtilities.shuffle(fwpassengersB, RandomHelper.getUniform());
+			SimUtilities.shuffle(fwpassengersC, RandomHelper.getUniform());
+			List<List<FlyingWingPassenger>> grouplist = new ArrayList<List<FlyingWingPassenger>>();
+			grouplist.add(fwpassengersC);
+			grouplist.add(fwpassengersB);
+			grouplist.add(fwpassengersA);
+			masterList.add(grouplist);
+
+			
+		}
+			
+			
+		List<List<FlyingWingPassenger>> groupAs = new ArrayList<List<FlyingWingPassenger>>();
+		List<List<FlyingWingPassenger>> groupBs = new ArrayList<List<FlyingWingPassenger>>();
+		List<List<FlyingWingPassenger>> groupCs = new ArrayList<List<FlyingWingPassenger>>();
+
+			
+			Random rd = new Random();
+			for(int outer_idx = 0; outer_idx < numberOfGroups; outer_idx++) {
+				for(int inner_idx = 0; inner_idx < DataHolder.numberOfSegmentsFlyingWing; inner_idx++) {
+					List<FlyingWingPassenger> fwpass = masterList.get(inner_idx).get(outer_idx);
+					switch (outer_idx) {
+					case 0:
+						groupAs.add(fwpass);
+						break;
+					case 1:
+						groupBs.add(fwpass);
+						break;
+					default:
+						groupCs.add(fwpass);
+						break;
+					}
+					
+					
+					
+					
+					
+				}
+			}
+			for(int outer_idx = 0; outer_idx < groupAs.get(0).size(); outer_idx++) {
+				for(int inner_idx = 0; inner_idx < DataHolder.numberOfSegmentsFlyingWing; inner_idx++) {
+					FlyingWingPassenger fwpas = groupAs.get(inner_idx).get(outer_idx);
+					fwpas.timeBeforeBoarding = totalgrouptime;
+					fwpas.boardingID = ind;
+					totalgrouptime += time;
+					context.add(fwpas);
+					ind++;
+					
+				}
+			}
+			for(int outer_idx = 0; outer_idx < groupBs.get(0).size(); outer_idx++) {
+				for(int inner_idx = 0; inner_idx < DataHolder.numberOfSegmentsFlyingWing; inner_idx++) {
+					FlyingWingPassenger fwpas = groupBs.get(inner_idx).get(outer_idx);
+					fwpas.timeBeforeBoarding = totalgrouptime;
+					fwpas.boardingID = ind;
+					totalgrouptime += time;
+					context.add(fwpas);
+					ind++;
+					
+				}
+			}
+			for(int outer_idx = 0; outer_idx < groupCs.get(DataHolder.numberOfSegmentsFlyingWing/2).size(); outer_idx++) {
+				for(int inner_idx = 0; inner_idx < DataHolder.numberOfSegmentsFlyingWing; inner_idx++) {
+					if (outer_idx < groupCs.get(inner_idx).size()) {
+						FlyingWingPassenger fwpas = groupCs.get(inner_idx).get(outer_idx);
+						fwpas.timeBeforeBoarding = totalgrouptime;
+						fwpas.boardingID = ind;
+						totalgrouptime += time;
+						context.add(fwpas);
+						ind++;
+					}
+					
+					
+				}
+			}
+			
+			
+
 	}
 
 	public void randomDisembarkingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid) {

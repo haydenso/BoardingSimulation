@@ -19,8 +19,8 @@ public class FlyingWingPassenger {
 	public int seatNumber[];
 	private boolean carryonLuggage;
 	private int timeSpentOnLuggage = 0;
-	private float startingPenalty = (float) 0.0; // 1 is the lowest now with randomSeed = 1. Lower than 1 and people will move instantly behind each other, not good, but could of course be tried. Starting Penalty default should be 1.
-	private int waitingToStart = 2;
+	public float startingPenalty = (float) 0.0; // 1 is the lowest now with randomSeed = 1. Lower than 1 and people will move instantly behind each other, not good, but could of course be tried. Starting Penalty default should be 1.
+	private int waitingToStart = 20;
 	private boolean doingLuggage = false;
 	private float speed;
 	private boolean seated = false;
@@ -42,9 +42,9 @@ public class FlyingWingPassenger {
 	private boolean readyToStart = false;
 	private boolean standingAround = false;
 	private double averageWaitingTime;
-	private int spacesGap = 1;
+	private int spacesGap = 0;
 	
-	//public int luggageTime = ProbabilityTimeGenerator.generateWeibullLuggageTime();
+	//public int luggageTime = ProbabilityTimeGenerator.generateGaussianLuggageTime();
 	public int luggageTime = 15;
 	
 	public FlyingWingPassenger(ContinuousSpace<Object> space, 
@@ -59,6 +59,7 @@ public class FlyingWingPassenger {
 		this.speed = speed;
 		this.group = group;
 		this.segment = segment;
+		
 	}
 	
 	
@@ -224,15 +225,10 @@ public class FlyingWingPassenger {
 				if(someoneinfront) {
 					//Do nothing (add stress factor?)
 					//DataHolder.numberOfCollissions += 1;
+					waitingToStart = 0;
 				}
 				else {
-					if (boardingID == 1) {
-						System.out.println("No one in front! Waiting time: " + waitingToStart);
-
-					}
-					if (waitingToStart == 1) {
-						//DataHolder.numberOfCollissions += 1;
-					}
+					
 					
 					// If starting penalty is over:
 					if (waitingToStart >= startingPenalty) {
@@ -251,6 +247,7 @@ public class FlyingWingPassenger {
 					}
 					else {
 						if (1 + waitingToStart - startingPenalty > 0) {
+							System.out.println(waitingToStart);
 							// Wait a little bit
 							float orval = speed;
 							//System.out.println("First: " + speed);
@@ -409,7 +406,10 @@ public class FlyingWingPassenger {
 		space.moveByVector(this, speed, angle, 0);
 		myPoint = space.getLocation(this);
 		grid.moveTo(this, (int)myPoint.getX(), (int)myPoint.getY());
-		updateFirstTimeMoving();
+		if ((int)myPoint.getY() == 1) {
+			updateFirstTimeMoving();
+
+		}
 		
 		
 	}
@@ -490,6 +490,8 @@ public class FlyingWingPassenger {
 			//Reset data trackers
 			DataHolder.FWnumOfBoardedPassengers = 0;
 			DataHolder.timeSpentWaiting = 0;
+			ProbabilityTimeGenerator.num = 0;
+			ProbabilityTimeGenerator.total_lugtime = 0;
 			
 			RunEnvironment.getInstance().endRun();
 			
@@ -716,6 +718,7 @@ public class FlyingWingPassenger {
 				DataHolder.numOfGroup12PassengersLeft -= 1;
 				break;
 			}*/
+			
 			DataHolder.FWnumOfBoardedPassengers += 1;
 			firstTimeMoving = false;
 		}

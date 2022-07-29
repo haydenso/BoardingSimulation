@@ -6,7 +6,7 @@ public class DataHolder {
 	public static int aisleSeatingTime = 5;
 	public static int middleSeatingTime = 7;
 	public static int unobstructedSeatingTime = 1;
-	public static double meanWalkingSpeed = 0.75;
+	public static double meanWalkingSpeed = 0.75;	
 	public static double deviationOfWalkingSpeed = 0.25;
 	public static double alphaLuggageTime = 1.7;
 	public static double betaLuggageTime = 16;
@@ -40,7 +40,7 @@ public class DataHolder {
 	//FLYING WING
 	public static int numberOfRowsFlyingWing = 14;
 	public static int numberOfSeatsInRowFlyingWing = 3;
-	public static int numberOfSegmentsFlyingWing = 1;
+	public static int numberOfSegmentsFlyingWing = 4;
 	public static int[][][][] seatedPassengersInRowFlyingWing = new int[numberOfSegmentsFlyingWing][numberOfRowsFlyingWing][2][numberOfSeatsInRowFlyingWing];
 
 	public static int firstGroupLimitFlyingWing = 5;
@@ -48,6 +48,8 @@ public class DataHolder {
 	
 	public static int numOfNonSeatedPassengersFlyingWing = (numberOfSegmentsFlyingWing-1)*numberOfRowsFlyingWing*numberOfSeatsInRowFlyingWing*2+2*(numberOfRowsFlyingWing-3)*numberOfSeatsInRowFlyingWing;
 	public static int FWnumOfBoardedPassengers= 0;
+	
+	
 
 	
 	
@@ -67,6 +69,17 @@ public class DataHolder {
 	// Trackers
 	public static int numberOfCollissions = 0;
 	public static int timeSpentWaiting = 0;
+	
+	public static void setComputedProperties() {
+		 seatedPassengersInRowFlyingWing = new int[numberOfSegmentsFlyingWing][numberOfRowsFlyingWing][2][numberOfSeatsInRowFlyingWing];
+		 numOfNonSeatedPassengersFlyingWing = (numberOfSegmentsFlyingWing-1)*numberOfRowsFlyingWing*numberOfSeatsInRowFlyingWing*2+2*(numberOfRowsFlyingWing-3)*numberOfSeatsInRowFlyingWing;
+		 NAInitialNumberOfPassengers = numberOfRows*numberOfSeatsInRow*2-numberOfSeatsInRow;
+		 numOfNonSeatedPassengers = NAInitialNumberOfPassengers;
+		 seatedPassengersInRow = new int[numberOfRows][2][3];
+		 numOfNonSeatedPassengersTETA = (numberOfSeatsInRowTETA+2*(numberOfSeatsInRowTETA-1))*35+(numberOfSeatsInRowTETA-1)*3*3-3;
+		 seatedPassengersInRowTETA = new int[numberOfSegmentsTETA][numberOfRowsTETA][2][2];
+
+	}
 
 
 }

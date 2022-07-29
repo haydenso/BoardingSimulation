@@ -20,7 +20,7 @@ public class Passenger {
 		public int seatNumber[];
 		private boolean carryonLuggage;
 		private int timeSpentOnLuggage = 0;
-		private float startingPenalty = (float) 0.0; // 1 is the lowest now with randomSeed = 1. Lower than 1 and people will move instantly behind each other, not good, but could of course be tried. Starting Penalty default should be 1.
+		private float startingPenalty = (float) 0.75; // 1 is the lowest now with randomSeed = 1. Lower than 1 and people will move instantly behind each other, not good, but could of course be tried. Starting Penalty default should be 1.
 		private int waitingToStart = 2;
 		private int timeWaited = 0;
 		private boolean doingLuggage = false;
@@ -44,9 +44,10 @@ public class Passenger {
 		//This is for more stochastic boarding (for more general procedure)
 
 		//public int luggageTime = ProbabilityTimeGenerator.generateWeibullLuggageTime();
-		
+		//public int luggageTime = ProbabilityTimeGenerator.generateGaussianLuggageTime();
+
 		//This is for completely deterministic boarding (for experiments)
-		public int luggageTime = 10;
+		public int luggageTime = 5;
 
 		public Passenger(ContinuousSpace<Object> space, 
 				Grid<Object> grid, 
@@ -66,12 +67,12 @@ public class Passenger {
 			
 			
 			if(timeBeforeBoarding <= 0) {
-				int totalNumOfPassengersLeft = DataHolder.numOfGroup1PassengersLeft + DataHolder.numOfGroup2PassengersLeft+DataHolder.numOfGroup3PassengersLeft+DataHolder.numOfGroup4PassengersLeft+
-						DataHolder.numOfGroup5PassengersLeft+DataHolder.numOfGroup6PassengersLeft+DataHolder.numOfGroup7PassengersLeft+DataHolder.numOfGroup8PassengersLeft+DataHolder.numOfGroup9PassengersLeft+DataHolder.numOfGroup10PassengersLeft
-						+DataHolder.numOfGroup11PassengersLeft+DataHolder.numOfGroup12PassengersLeft+DataHolder.numOfGroup13PassengersLeft;
+				//int totalNumOfPassengersLeft = DataHolder.numOfGroup1PassengersLeft + DataHolder.numOfGroup2PassengersLeft+DataHolder.numOfGroup3PassengersLeft+DataHolder.numOfGroup4PassengersLeft+
+				//		DataHolder.numOfGroup5PassengersLeft+DataHolder.numOfGroup6PassengersLeft+DataHolder.numOfGroup7PassengersLeft+DataHolder.numOfGroup8PassengersLeft+DataHolder.numOfGroup9PassengersLeft+DataHolder.numOfGroup10PassengersLeft
+			//			+DataHolder.numOfGroup11PassengersLeft+DataHolder.numOfGroup12PassengersLeft+DataHolder.numOfGroup13PassengersLeft;
 				//System.out.println("one " + totalNumOfPassengersLeft);
 				//System.out.println(DataHolder.NAInitialNumberOfPassengers);
-				System.out.println(DataHolder.numOfBoardedPAssengers);
+				//System.out.println(DataHolder.numOfBoardedPAssengers);
 				if ((DataHolder.numOfBoardedPAssengers) == boardingID) {
 					// Time to start boarding, just to make sure that they go in their respective order 
 					readyToStart = true;
@@ -475,6 +476,8 @@ public class Passenger {
 				DataHolder.numOfNonSeatedPassengers = DataHolder.numberOfRows*DataHolder.numberOfSeatsInRow*2-DataHolder.numberOfSeatsInRow;
 				DataHolder.numOfBoardedPAssengers = 0;
 				DataHolder.timeSpentWaiting = 0;
+				ProbabilityTimeGenerator.num = 0;
+				ProbabilityTimeGenerator.total_lugtime = 0;
 				
 				RunEnvironment.getInstance().endRun();
 				

@@ -60,7 +60,7 @@ public class ProbabilityTimeGenerator {
 		//System.out.println(lugtime);
 		total_lugtime += lugtime;
 		num += 1;
-		System.out.println((double) total_lugtime/(double) num);
+		//System.out.println((double) total_lugtime/(double) num);
 		//System.out.println(total_lugtime);
 		//System.out.println(num);
 		return lugtime;

@@ -3,6 +3,7 @@ package boarding;
 import repast.simphony.context.Context;
 import repast.simphony.engine.environment.RunEnvironment;
 import repast.simphony.engine.schedule.ScheduledMethod;
+import repast.simphony.parameter.Parameters;
 import repast.simphony.query.space.grid.GridCellNgh;
 import repast.simphony.space.SpatialMath;
 import repast.simphony.space.continuous.ContinuousSpace;
@@ -42,10 +43,10 @@ public class FlyingWingPassenger {
 	private boolean readyToStart = false;
 	private boolean standingAround = false;
 	private double averageWaitingTime;
-	private int spacesGap = 0;
+	private int spacesGap = 1;
 	
-	//public int luggageTime = ProbabilityTimeGenerator.generateGaussianLuggageTime();
-	public int luggageTime = 15;
+	public int luggageTime = ProbabilityTimeGenerator.generateGaussianLuggageTime();
+	//public int luggageTime = 15;
 	
 	public FlyingWingPassenger(ContinuousSpace<Object> space, 
 			Grid<Object> grid, 
@@ -59,6 +60,13 @@ public class FlyingWingPassenger {
 		this.speed = speed;
 		this.group = group;
 		this.segment = segment;
+		
+		
+		Parameters params = RunEnvironment.getInstance().getParameters();
+		int spacesGap = params.getInteger("spacesGap");
+		this.spacesGap = spacesGap;
+
+		
 		
 	}
 	

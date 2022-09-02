@@ -3,6 +3,7 @@ package boarding;
 import repast.simphony.context.Context;
 import repast.simphony.engine.environment.RunEnvironment;
 import repast.simphony.engine.schedule.ScheduledMethod;
+import repast.simphony.parameter.Parameters;
 import repast.simphony.query.space.grid.GridCellNgh;
 import repast.simphony.space.SpatialMath;
 import repast.simphony.space.continuous.ContinuousSpace;
@@ -19,8 +20,9 @@ public class FlyingWingPassenger {
 	public int seatNumber[];
 	private boolean carryonLuggage;
 	private int timeSpentOnLuggage = 0;
-	public float startingPenalty = (float) 0.0; // 1 is the lowest now with randomSeed = 1. Lower than 1 and people will move instantly behind each other, not good, but could of course be tried. Starting Penalty default should be 1.
-	private int waitingToStart = 20;
+	Parameters params = RunEnvironment.getInstance().getParameters();
+	public float startingPenalty = 0; // 1 is the lowest now with randomSeed = 1. Lower than 1 and people will move instantly behind each other, not good, but could of course be tried. Starting Penalty default should be 1.
+	private int waitingToStart = 50000;
 	private boolean doingLuggage = false;
 	private float speed;
 	private boolean seated = false;
@@ -29,7 +31,7 @@ public class FlyingWingPassenger {
 	private int seatingTime = 0;
 	public int group;
 	private boolean firstTimeMoving = true;
-	private float cornerCoefficient = (float) 1.0;
+	private float cornerCoefficient = params.getFloat("cornerCoefficient");;
 	private boolean justEnteredCorner = true;
 	public int boardingID = 0;
 	//private static int numOfNonSeatedPassengers = DataHolder.numOfNonSeatedPassengers;
@@ -42,10 +44,10 @@ public class FlyingWingPassenger {
 	private boolean readyToStart = false;
 	private boolean standingAround = false;
 	private double averageWaitingTime;
-	private int spacesGap = 0;
+	private int spacesGap = params.getInteger("spacesGap");
 	
 	//public int luggageTime = ProbabilityTimeGenerator.generateGaussianLuggageTime();
-	public int luggageTime = 15;
+	public int luggageTime = params.getInteger("luggageTime");
 	
 	public FlyingWingPassenger(ContinuousSpace<Object> space, 
 			Grid<Object> grid, 

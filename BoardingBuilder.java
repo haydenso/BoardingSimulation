@@ -46,8 +46,8 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 		int numberOfSegmentsFlyingWing = params.getInteger("numberOfSegmentsFlyingWing");
 		int time = params.getInteger("timeSpace");
 		int groups = params.getInteger("numberOfGroups");
-		int entropy = params.getInteger("entropy");
-
+		//int entropy = params.getInteger("entropy");
+		int method = params.getInteger("method");
 		float stoppingPenalty = params.getFloat("stoppingPenalty");
 		//stoppingPenalty = (float) 0.5;
 		DataHolder.numberOfSegmentsFlyingWing = numberOfSegmentsFlyingWing;
@@ -156,39 +156,72 @@ public class BoardingBuilder implements ContextBuilder<Object> {
 //FLYING WING AIRCRAFT
 		
 	//Boarding
+		switch(method) {
+		case 0:
+			//Random boarding
+			randomBoardingFlyingWing(context, space, grid, time, stoppingPenalty);
+			break;
 		
-		//Random boarding
-		//randomBoardingFlyingWing(context, space, grid, time);
+		case 1:
+			//back to front boarding
+			backToFrontFlyingWing(context, space, grid, time, stoppingPenalty);
+			break;
 		
-		//Group boarding
-		//groupBoardingFlyingWing(context, space, grid, time);
+		case 2:
+			//front to back boarding
+			frontToBackFlyingWing(context, space, grid, time, stoppingPenalty);
+			break;
 		
-		//WMA boarding
-		//seatBoardingFlyingWing(context, space, grid);
+		case 3:
+			//WMA boarding
+			seatBoardingFlyingWing(context, space, grid, time, stoppingPenalty);
+			break;
 		
-		// Segmented WMA boarding
-		segmentedSeatBoardingFlyingWing(context, space, grid, time, stoppingPenalty);
-
-		//Steffen Boarding
-		//steffenBoardingFlyingWing(context, space, grid, time, stoppingPenalty, entropy);
-		
+		case 4:
+			// Segmented WMA boarding
+			segmentedSeatBoardingFlyingWing(context, space, grid, time, stoppingPenalty);
+			break;
+			
+		case 5:
+			//Steffen Boarding
+			steffenBoardingFlyingWing(context, space, grid, time, stoppingPenalty);
+			break;
+			
+		case 6:
+			//Parallel segments boarding
+			parallelSegmentsBoardingFlyingWing(context, space, grid, time, stoppingPenalty);
+			break;
+			
+		case 7:
+			//Segmented boarding
+			segmentedSegmentedBoardingFlyingWing(context, space, grid, time, stoppingPenalty);
+			break;
+			
+		case 8:
+			// Segmented front to back amw
+			segmentedFrontToBackInToOut(context, space, grid, time);
+			break;
+			
+		default:
+			//Random boarding
+			randomBoardingFlyingWing(context, space, grid, time, stoppingPenalty);
+			break;
+			
 		//Segmented boarding
 		//segmentedBoardingFlyingWing(context, space, grid);
 		
-		//Segmented boarding
-		//segmentedSegmentedBoardingFlyingWing(context, space, grid);
+
 		
-		//Parallel segments boarding
-		//parallelSegmentsBoardingFlyingWing(context, space, grid, time);
 		
-		// Segmented front to back amw
-		//segmentedFrontToBackInToOut(context, space, grid, time);
+		
 		
 		// Parallel seat boarding
 		//parallelSeatBoardingFlyingWing(context, space, grid, time);
 		
 		// Parallel group boarding
 		//parallelGroupBoardingFlyingWing(context, space, grid, time);
+		
+		}
 		
 	//Disembarking
 		
@@ -1498,7 +1531,7 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 		
 	}
 	
-	public void randomBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time) {
+	public void randomBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time, float stoppingPenalty) {
 		//Create passengers
 		List<FlyingWingPassenger> fwpassengers = new ArrayList<FlyingWingPassenger>();
 		for(int s = 0; s < DataHolder.numberOfSegmentsFlyingWing; s++) {
@@ -1543,6 +1576,7 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 			
 			pas.timeBeforeBoarding = totalgrouptime;
 			pas.boardingID = ind;
+			pas.startingPenalty = stoppingPenalty;
 			totalgrouptime += time;
 			context.add(pas);
 			ind++;
@@ -1550,7 +1584,7 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 	}
 	
 	
-	public void groupBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time) {
+	public void backToFrontFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time, float stoppingPenalty) {
 		List<FlyingWingPassenger> fwpassengersA = new ArrayList<FlyingWingPassenger>();
 		List<FlyingWingPassenger> fwpassengersB = new ArrayList<FlyingWingPassenger>();
 		List<FlyingWingPassenger> fwpassengersC = new ArrayList<FlyingWingPassenger>();
@@ -1571,8 +1605,92 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 								
 								int seat[] = {i,e,a};
 								Random rd = new Random();
+								float speed = (float) 1;
+								//float speed = (float) (0.5 + rd.nextFloat()*(0.5));
+								FlyingWingPassenger fwpas = new FlyingWingPassenger(space, grid, seat, 
+										true, speed, 1, s);
+								if(i<DataHolder.firstGroupLimitFlyingWing) {
+									fwpas.group = 3;
+									fwpassengersA.add(fwpas);
+								}
+								else if(i<DataHolder.secondGroupLimitFlyingWing) {
+									fwpas.group = 2;
+									fwpassengersB.add(fwpas);
+
+								}
+								else {
+									fwpas.group = 1;
+									fwpassengersC.add(fwpas);
+
+								}
+								DataHolder.seatedPassengersInRowFlyingWing[s][i][e][a] = 0;
+
 								
-								float speed = (float) (0.5 + rd.nextFloat()*(0.5));
+							}
+						}
+					
+				}
+			}
+			
+			
+		}
+		
+		SimUtilities.shuffle(fwpassengersA, RandomHelper.getUniform());
+		SimUtilities.shuffle(fwpassengersB, RandomHelper.getUniform());
+		SimUtilities.shuffle(fwpassengersC, RandomHelper.getUniform());
+
+		List<List<FlyingWingPassenger>> grouplist = new ArrayList<List<FlyingWingPassenger>>();
+		grouplist.add(fwpassengersC);
+		grouplist.add(fwpassengersB);
+		grouplist.add(fwpassengersA);
+
+		
+		int ind = 0;
+		int totalgrouptime = 0;
+		Random rd = new Random();
+		
+		for(List<FlyingWingPassenger> fwlist : grouplist) {
+
+			for(FlyingWingPassenger fwpas : fwlist) {
+				fwpas.startingPenalty = stoppingPenalty;
+				fwpas.timeBeforeBoarding = totalgrouptime;
+				fwpas.boardingID = ind;
+				totalgrouptime += time;
+				context.add(fwpas);
+				ind++;
+			}
+		}
+		
+		
+		DataHolder.numOfGroup3PassengersLeft = fwpassengersA.size();
+		DataHolder.numOfGroup2PassengersLeft = fwpassengersB.size();
+		DataHolder.numOfGroup1PassengersLeft = fwpassengersC.size();
+
+	}
+
+	public void frontToBackFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time, float stoppingPenalty) {
+		List<FlyingWingPassenger> fwpassengersA = new ArrayList<FlyingWingPassenger>();
+		List<FlyingWingPassenger> fwpassengersB = new ArrayList<FlyingWingPassenger>();
+		List<FlyingWingPassenger> fwpassengersC = new ArrayList<FlyingWingPassenger>();
+
+		for(int s = 0; s < DataHolder.numberOfSegmentsFlyingWing; s++) {
+
+			for (int i = 0; i < DataHolder.numberOfRowsFlyingWing; i++) {
+				for(int e = 0; e < 2; e++) {
+					boolean skip = false;
+					if((s==0 && e == 1 && i < 3)) {
+						skip = true;
+					}
+					else if((s==DataHolder.numberOfSegmentsFlyingWing-1 && e == 0 && i < 3)){
+						skip = true;
+					}
+						if(!skip) {
+							for (int a = 0; a < numberOfSeatsInRow; a++) {
+								
+								int seat[] = {i,e,a};
+								Random rd = new Random();
+								float speed = (float) 1;
+								//float speed = (float) (0.5 + rd.nextFloat()*(0.5));
 								FlyingWingPassenger fwpas = new FlyingWingPassenger(space, grid, seat, 
 										true, speed, 1, s);
 								if(i<DataHolder.firstGroupLimitFlyingWing) {
@@ -1612,11 +1730,13 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 
 		
 		int ind = 0;
+		int totalgrouptime = 0;
 		Random rd = new Random();
 		
 		for(List<FlyingWingPassenger> fwlist : grouplist) {
-			int totalgrouptime = 0;
+
 			for(FlyingWingPassenger fwpas : fwlist) {
+				fwpas.startingPenalty = stoppingPenalty;
 				fwpas.timeBeforeBoarding = totalgrouptime;
 				fwpas.boardingID = ind;
 				totalgrouptime += time;
@@ -1632,8 +1752,7 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 
 	}
 	
-	
-	public void seatBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid) {
+	public void seatBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time, float stoppingPenalty) {
 		List<FlyingWingPassenger> fwpassengersW = new ArrayList<FlyingWingPassenger>();
 		List<FlyingWingPassenger> fwpassengersM = new ArrayList<FlyingWingPassenger>();
 		List<FlyingWingPassenger> fwpassengersA = new ArrayList<FlyingWingPassenger>();
@@ -1689,18 +1808,18 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 		SimUtilities.shuffle(fwpassengersW, RandomHelper.getUniform());
 
 		List<List<FlyingWingPassenger>> grouplist = new ArrayList<List<FlyingWingPassenger>>();
-		grouplist.add(fwpassengersA);
-		grouplist.add(fwpassengersM);
 		grouplist.add(fwpassengersW);
+		grouplist.add(fwpassengersM);
+		grouplist.add(fwpassengersA);
 
 		
-		int ind = 0;
-		Random rd = new Random();
 		
+		Random rd = new Random();
+		int ind = 0;
+		int totalgrouptime = 0;
 		for(List<FlyingWingPassenger> fwlist : grouplist) {
-			int totalgrouptime = 0;
 			for(FlyingWingPassenger fwpas : fwlist) {
-				int time = 1+rd.nextInt(4);
+				fwpas.startingPenalty = stoppingPenalty;
 				fwpas.timeBeforeBoarding = totalgrouptime;
 				totalgrouptime += time;
 				fwpas.boardingID = ind;
@@ -1801,7 +1920,7 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 
 	}*/
 	
-	public void steffenBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time, float stoppingPenalty, int entropy) {
+	public void steffenBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time, float stoppingPenalty) {
 
 		
 		List<FlyingWingPassenger> groupLWE = new ArrayList<FlyingWingPassenger>();
@@ -1990,14 +2109,14 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 		// Switch people around
 		Random rd = new Random();
 
-		for(int idx = 0; idx < entropy; idx++) {
+		/*for(int idx = 0; idx < entropy; idx++) {
 			int i_1 = rd.nextInt(grouplist.size());
 			int i_2 = rd.nextInt(grouplist.size());
 			FlyingWingPassenger fwp1 = grouplist.get(i_1);
 			grouplist.set(i_1, grouplist.get(i_2));
 			grouplist.set(i_2,  fwp1);
 		}
-		
+		*/
 		int ind = 0;
 		int totalgrouptime = 0;
 		//for(List<FlyingWingPassenger> fwlist : grouplist) {
@@ -2089,6 +2208,7 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 
 					
 					for(FlyingWingPassenger fwpas : fwpass) {
+						fwpas.startingPenalty = stoppingPenalty;
 						fwpas.timeBeforeBoarding = totalGroupTime;
 						fwpas.boardingID = ind;
 						totalGroupTime += time;
@@ -2173,10 +2293,11 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 
 		
 		int ind = 0;
+		int totalgrouptime = 0;
 		Random rd = new Random();
 		
 		for(List<FlyingWingPassenger> fwlist : grouplist) {
-			int totalgrouptime = 0;
+			
 			for(FlyingWingPassenger fwpas : fwlist) {
 				int time = 1+rd.nextInt(4);
 				fwpas.timeBeforeBoarding = totalgrouptime;
@@ -2195,7 +2316,7 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 
 	}
 	
-	public void segmentedSegmentedBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid) {
+	public void segmentedSegmentedBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time, float stoppingPenalty) {
 		List<FlyingWingPassenger> fwpassengers1 = new ArrayList<FlyingWingPassenger>();
 		List<FlyingWingPassenger> fwpassengers2 = new ArrayList<FlyingWingPassenger>();
 		List<FlyingWingPassenger> fwpassengers3 = new ArrayList<FlyingWingPassenger>();
@@ -2219,10 +2340,10 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 								
 								int seat[] = {i,e,a};
 								Random rd = new Random();
-								
-								float speed = (float) (0.5 + rd.nextFloat()*(0.5));
+								float speed = (float) 1;
+								//float speed = (float) (0.5 + rd.nextFloat()*(0.5));
 								FlyingWingPassenger fwpas = new FlyingWingPassenger(space, grid, seat, 
-										rd.nextBoolean(), speed, 1, s);
+										true, speed, 1, s);
 								
 								if(e==0) {
 									if(a==2) {
@@ -2286,13 +2407,14 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 
 		
 		int ind = 0;
+		int totalgrouptime = 0;
 		Random rd = new Random();
 		
 		for(List<FlyingWingPassenger> fwlist : grouplist) {
-			int totalgrouptime = 0;
+			
 			for(FlyingWingPassenger fwpas : fwlist) {
-				int time = 1+rd.nextInt(4);
 				fwpas.timeBeforeBoarding = totalgrouptime;
+				fwpas.startingPenalty = stoppingPenalty;
 				totalgrouptime += time;
 				fwpas.boardingID = ind;
 				context.add(fwpas);
@@ -2310,7 +2432,7 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 
 	}
 	
-	public void parallelSegmentsBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time) {
+	public void parallelSegmentsBoardingFlyingWing(Context<Object> context, ContinuousSpace space, Grid grid, int time, float stoppingPenalty) {
 		//Create passengers
 		List<FlyingWingPassenger> fwpassengers = new ArrayList<FlyingWingPassenger>();
 		
@@ -2382,6 +2504,7 @@ public void groupBoardingScalable(Context<Object> context, ContinuousSpace space
 								fwpassengers.add(fwpas);
 								fwpas.boardingID = ind;
 								fwpas.timeBeforeBoarding = totalGroupTime;
+								fwpas.startingPenalty = stoppingPenalty;
 								totalGroupTime += time;
 								context.add(fwpas);
 								ind += 1;

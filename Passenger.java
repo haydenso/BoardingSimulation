@@ -47,7 +47,7 @@ public class Passenger {
 		//public int luggageTime = ProbabilityTimeGenerator.generateGaussianLuggageTime();
 
 		//This is for completely deterministic boarding (for experiments)
-		public int luggageTime = 5;
+		public int luggageTime = 15;
 
 		public Passenger(ContinuousSpace<Object> space, 
 				Grid<Object> grid, 

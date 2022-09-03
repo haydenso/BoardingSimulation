@@ -20,7 +20,7 @@ public class FlyingWingPassenger {
 	public int seatNumber[];
 	private boolean carryonLuggage;
 	private int timeSpentOnLuggage = 0;
-	public float startingPenalty = (float) 0.0; // 1 is the lowest now with randomSeed = 1. Lower than 1 and people will move instantly behind each other, not good, but could of course be tried. Starting Penalty default should be 1.
+	public float startingPenalty = (float) 0.5; // 1 is the lowest now with randomSeed = 1. Lower than 1 and people will move instantly behind each other, not good, but could of course be tried. Starting Penalty default should be 1.
 	private int waitingToStart = 20;
 	private boolean doingLuggage = false;
 	private float speed;
@@ -30,7 +30,7 @@ public class FlyingWingPassenger {
 	private int seatingTime = 0;
 	public int group;
 	private boolean firstTimeMoving = true;
-	private float cornerCoefficient = (float) 1.0;
+	private float cornerCoefficient = (float) 0.75;
 	private boolean justEnteredCorner = true;
 	public int boardingID = 0;
 	//private static int numOfNonSeatedPassengers = DataHolder.numOfNonSeatedPassengers;
@@ -45,8 +45,8 @@ public class FlyingWingPassenger {
 	private double averageWaitingTime;
 	private int spacesGap = 1;
 	
-	public int luggageTime = ProbabilityTimeGenerator.generateGaussianLuggageTime();
-	//public int luggageTime = 15;
+	//public int luggageTime = ProbabilityTimeGenerator.generateGaussianLuggageTime();
+	public int luggageTime = 15;
 	
 	public FlyingWingPassenger(ContinuousSpace<Object> space, 
 			Grid<Object> grid, 

@@ -40,13 +40,13 @@ public class DataHolder {
 	//FLYING WING
 	public static int numberOfRowsFlyingWing = 14;
 	public static int numberOfSeatsInRowFlyingWing = 3;
-	public static int numberOfSegmentsFlyingWing = 4;
+	public static int numberOfSegmentsFlyingWing = 1;
 	public static int[][][][] seatedPassengersInRowFlyingWing = new int[numberOfSegmentsFlyingWing][numberOfRowsFlyingWing][2][numberOfSeatsInRowFlyingWing];
 
 	public static int firstGroupLimitFlyingWing = 5;
 	public static int secondGroupLimitFlyingWing = 10;
 	
-	public static int numOfNonSeatedPassengersFlyingWing = (numberOfSegmentsFlyingWing-1)*numberOfRowsFlyingWing*numberOfSeatsInRowFlyingWing*2+2*(numberOfRowsFlyingWing-3)*numberOfSeatsInRowFlyingWing;
+	public static int numOfNonSeatedPassengersFlyingWing = numberOfSegmentsFlyingWing*numberOfRowsFlyingWing*numberOfSeatsInRowFlyingWing*2;
 	public static int FWnumOfBoardedPassengers= 0;
 	
 	
@@ -72,7 +72,7 @@ public class DataHolder {
 	
 	public static void setComputedProperties() {
 		 seatedPassengersInRowFlyingWing = new int[numberOfSegmentsFlyingWing][numberOfRowsFlyingWing][2][numberOfSeatsInRowFlyingWing];
-		 numOfNonSeatedPassengersFlyingWing = (numberOfSegmentsFlyingWing-1)*numberOfRowsFlyingWing*numberOfSeatsInRowFlyingWing*2+2*(numberOfRowsFlyingWing-3)*numberOfSeatsInRowFlyingWing;
+		 numOfNonSeatedPassengersFlyingWing = numberOfSegmentsFlyingWing*numberOfRowsFlyingWing*numberOfSeatsInRowFlyingWing*2;
 		 NAInitialNumberOfPassengers = numberOfRows*numberOfSeatsInRow*2-numberOfSeatsInRow;
 		 numOfNonSeatedPassengers = NAInitialNumberOfPassengers;
 		 seatedPassengersInRow = new int[numberOfRows][2][3];

@@ -255,7 +255,7 @@ public class FlyingWingPassenger {
 					}
 					else {
 						if (1 + waitingToStart - startingPenalty > 0) {
-							System.out.println(waitingToStart);
+							//System.out.println(waitingToStart);
 							// Wait a little bit
 							float orval = speed;
 							//System.out.println("First: " + speed);
@@ -489,10 +489,10 @@ public class FlyingWingPassenger {
 		//Record the seating
 		DataHolder.seatedPassengersInRowFlyingWing[segment][seatNumber[0]][seatNumber[1]][seatNumber[2]] = 1;
 		DataHolder.numOfNonSeatedPassengersFlyingWing -= 1;
-		
+		//System.out.println(DataHolder.numOfNonSeatedPassengersFlyingWing);
 		//System.out.println(luggageTime);
 		if (DataHolder.numOfNonSeatedPassengersFlyingWing == 0) {
-			DataHolder.numOfNonSeatedPassengersFlyingWing = (DataHolder.numberOfSegmentsFlyingWing-1)*DataHolder.numberOfRowsFlyingWing*DataHolder.numberOfSeatsInRowFlyingWing*2+2*(DataHolder.numberOfRowsFlyingWing-3)*DataHolder.numberOfSeatsInRowFlyingWing;
+			DataHolder.numOfNonSeatedPassengersFlyingWing = (DataHolder.numberOfSegmentsFlyingWing)*DataHolder.numberOfRowsFlyingWing*DataHolder.numberOfSeatsInRowFlyingWing*2;
 			averageWaitingTime = ((double) (DataHolder.timeSpentWaiting))/((double) DataHolder.numberOfCollissions);
 
 			//Reset data trackers
@@ -742,7 +742,7 @@ public class FlyingWingPassenger {
 			int aisleSeat = peopleSeatedInRow[0];
 			int middleSeat = peopleSeatedInRow[1];
 
-			seatingTime = aisleSeat*5+middleSeat*7+1*(aisleSeat+middleSeat)+1;
+			seatingTime = aisleSeat*3+middleSeat*5+1*(aisleSeat+middleSeat)+1;
 		
 			//System.out.println(seatingTime);
 		}
